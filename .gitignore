@@ -1,0 +1,12 @@
+# Системные файлы
+.DS_Store
+.idea/
+.vscode/
+
+# Зависимости и окружение
+/vendor/
+.env
+.env.local
+
+# Логи
+*.log
