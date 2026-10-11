@@ -4,7 +4,7 @@ require_once __DIR__ . '/../config/database.php';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($id <= 0) {
-    header('Location: /public/');
+    header('Location: /');
     exit;
 }
 
@@ -17,12 +17,9 @@ $stmt->execute([$id]);
 $workout = $stmt->fetch();
 
 if (!$workout) {
-    header('Location: /public/');
+    header('Location: /');
     exit;
 }
-
-// Пока упражнений ещё нет — просто заготовка
-$exercises = [];
 ?>
 
 <!DOCTYPE html>
@@ -79,7 +76,7 @@ $exercises = [];
 </head>
 <body>
 
-    <a href="/public/" class="btn btn-secondary">← Все тренировки</a>
+    <a href="/" class="btn btn-secondary">← Все тренировки</a>
 
     <h1>Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></h1>
 
@@ -92,7 +89,7 @@ $exercises = [];
     </div>
 
     <?php if ($workout['notes']): ?>
-        <div class="notes">
+        <div style="background:#f9fafb; padding:16px; border-radius:8px; margin-bottom:30px;">
             <?= nl2br(htmlspecialchars($workout['notes'])) ?>
         </div>
     <?php endif; ?>
@@ -101,7 +98,7 @@ $exercises = [];
 
     <h2>Упражнения</h2>
 
-    <div class="empty">
+    <div class="empty" style="border:2px dashed #e5e7eb; border-radius:10px;">
         Пока нет ни одного упражнения.<br>
         Добавьте первое!
     </div>

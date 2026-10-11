@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$workout_date, $body_weight, $body_weight_unit, $notes ?: null]);
 
         // После создания перенаправляем на главную
-        header('Location: /public/');
+        header('Location: /');
         exit;
     } catch (Exception $e) {
         $error = 'Ошибка при сохранении: ' . $e->getMessage();
