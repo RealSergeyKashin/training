@@ -265,6 +265,10 @@ function fmt_num($v) {
                         <?php endif; ?>
                     </div>
                     <div class="exercise-actions">
+                        <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=up"
+                            class="btn btn-secondary btn-sm" title="Выше">↑</a>
+                        <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=down"
+                            class="btn btn-secondary btn-sm" title="Ниже">↓</a>
                         <a href="add_set.php?exercise_id=<?= (int)$exercise['id'] ?>" class="btn btn-sm">+ Подход</a>
                         <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
                         <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
@@ -301,6 +305,8 @@ function fmt_num($v) {
                                     <?php endif; ?>
                                 </div>
                                 <div class="set-actions">
+                                    <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=up" title="Выше">↑</a>
+                                    <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=down" title="Ниже">↓</a>
                                     <a href="edit_set.php?id=<?= (int)$set['id'] ?>">изменить</a>
                                     <a class="del" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
                                        onclick="return confirm('Удалить этот подход?');">удалить</a>
