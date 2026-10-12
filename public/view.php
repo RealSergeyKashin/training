@@ -20,6 +20,17 @@ if (!$workout) {
     header('Location: /');
     exit;
 }
+
+// Упражнения этой тренировки
+$stmt = $pdo->prepare("
+    SELECT id, name, notes, sort_order, measurement_type
+    FROM exercises
+    WHERE workout_id = ? AND deleted_at IS NULL
+    ORDER BY sort_order ASC, id ASC
+");
+$stmt->execute([$id]);
+$exercises = $stmt->fetchAll();
+
 ?>
 
 <!DOCTYPE html>
@@ -98,10 +109,25 @@ if (!$workout) {
 
     <h2>Упражнения</h2>
 
-    <div class="empty" style="border:2px dashed #e5e7eb; border-radius:10px;">
-        Пока нет ни одного упражнения.<br>
-        Добавьте первое!
-    </div>
+    <?php if (empty($exercises)): ?>
+        <div class="empty" style="border:2px dashed #e5e7eb; border-radius:10px;">
+            Пока нет ни одного упражнения.<br>
+            Добавьте первое!
+        </div>
+    <?php else: ?>
+        <?php foreach ($exercises as $exercise): ?>
+            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; background: #fff;">
+                <div style="font-size: 18px; font-weight: 600;">
+                    <?= (int)$exercise['sort_order'] ?>. <?= htmlspecialchars($exercise['name']) ?>
+                </div>
+                <?php if ($exercise['notes']): ?>
+                    <div style="color: #6b7280; font-size: 14px; margin-top: 6px;">
+                        <?= nl2br(htmlspecialchars($exercise['notes'])) ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
 </body>
 </html>
