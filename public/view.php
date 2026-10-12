@@ -123,6 +123,7 @@ if ($exercises) {
         class="btn btn-secondary"
         style="color: #b91c1c;"
         onclick="return confirm('Удалить эту тренировку?');">Удалить тренировку</a>
+        <a href="edit_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary">Изменить</a>
     </div>
 
 
@@ -158,6 +159,11 @@ if ($exercises) {
                     onclick="return confirm('Удалить упражнение и его подходы?');"
                     style="font-size: 13px; color: #b91c1c; text-decoration: none; margin-left: 8px;">
                         Удалить
+                    </a>
+
+                    <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>"
+                    style="font-size: 13px; color: #2563eb; text-decoration: none; margin-left: 8px;">
+                        изменить
                     </a>
                     
                 </div>
@@ -201,6 +207,12 @@ if ($exercises) {
                                 style="margin-left: 8px; color: #b91c1c; text-decoration: none; font-size: 13px;">
                                     удалить
                                 </a>
+
+                                <a href="edit_set.php?id=<?= (int)$set['id'] ?>"
+                                style="margin-left: 8px; color: #2563eb; text-decoration: none; font-size: 13px;">
+                                    изменить
+                                </a>
+                                
                             </div>
                         <?php endforeach; ?>
                     </div>
