@@ -116,6 +116,16 @@ if ($exercises) {
         Создана: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($workout['created_at']))) ?>
     </div>
 
+
+    <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary">Копировать как шаблон</a>
+        <a href="delete.php?type=workout&id=<?= (int)$workout['id'] ?>"
+        class="btn btn-secondary"
+        style="color: #b91c1c;"
+        onclick="return confirm('Удалить эту тренировку?');">Удалить тренировку</a>
+    </div>
+
+
     <?php if ($workout['notes']): ?>
         <div style="background:#f9fafb; padding:16px; border-radius:8px; margin-bottom:30px;">
             <?= nl2br(htmlspecialchars($workout['notes'])) ?>
@@ -143,6 +153,13 @@ if ($exercises) {
                     style="display: inline-block; background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
                         + Подход
                     </a>
+
+                    <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
+                    onclick="return confirm('Удалить упражнение и его подходы?');"
+                    style="font-size: 13px; color: #b91c1c; text-decoration: none; margin-left: 8px;">
+                        Удалить
+                    </a>
+                    
                 </div>
 
                 <?php if ($exercise['notes']): ?>
@@ -178,6 +195,12 @@ if ($exercises) {
                                         <?= nl2br(htmlspecialchars($set['notes'])) ?>
                                     </div>
                                 <?php endif; ?>
+
+                                <a href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
+                                onclick="return confirm('Удалить этот подход?');"
+                                style="margin-left: 8px; color: #b91c1c; text-decoration: none; font-size: 13px;">
+                                    удалить
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>

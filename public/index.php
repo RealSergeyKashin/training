@@ -74,8 +74,9 @@ $workouts = $stmt->fetchAll();
         </div>
     <?php else: ?>
         <?php foreach ($workouts as $workout): ?>
-            <a href="view.php?id=<?= $workout['id'] ?>" style="text-decoration: none; color: inherit;">
-                <div class="workout">
+            
+            <div class="workout">
+                <a href="view.php?id=<?= $workout['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
                     <div class="workout-date">
                         <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?>
                     </div>
@@ -89,8 +90,16 @@ $workouts = $stmt->fetchAll();
                     <?php if ($workout['notes']): ?>
                         <div style="margin-top:8px;"><?= nl2br(htmlspecialchars($workout['notes'])) ?></div>
                     <?php endif; ?>
+                </a>
+                <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>"
+                    style="font-size: 13px; color: #2563eb; text-decoration: none;">Копировать</a>
+                    <a href="delete.php?type=workout&id=<?= (int)$workout['id'] ?>"
+                    onclick="return confirm('Удалить эту тренировку?');"
+                    style="font-size: 13px; color: #b91c1c; text-decoration: none;">Удалить</a>
                 </div>
-            </a>
+            </div>
+
         <?php endforeach; ?>
     <?php endif; ?>
 
