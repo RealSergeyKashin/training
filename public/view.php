@@ -8,9 +8,8 @@ if ($id <= 0) {
     exit;
 }
 
-// Получаем тренировку
 $stmt = $pdo->prepare("
-    SELECT * FROM workouts 
+    SELECT * FROM workouts
     WHERE id = ? AND deleted_at IS NULL
 ");
 $stmt->execute([$id]);
@@ -21,7 +20,6 @@ if (!$workout) {
     exit;
 }
 
-// Упражнения этой тренировки
 $stmt = $pdo->prepare("
     SELECT id, name, notes, sort_order, measurement_type
     FROM exercises
@@ -31,7 +29,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id]);
 $exercises = $stmt->fetchAll();
 
-// Подходы по всем упражнениям тренировки
 $sets_by_exercise = [];
 if ($exercises) {
     $exercise_ids = array_column($exercises, 'id');
@@ -48,8 +45,11 @@ if ($exercises) {
     }
 }
 
+function fmt_num($v) {
+    if ($v === null || $v === '') return '—';
+    return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -57,162 +57,257 @@ if ($exercises) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></title>
     <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #fff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --blue: #2563eb;
+            --blue-hover: #1d4ed8;
+            --red: #b91c1c;
+            --warmup: #fef3c7;
+            --work: #eff6ff;
+            --done: #ecfdf5;
+            --pending: #fff7ed;
+        }
+        * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-            color: #222;
-            line-height: 1.5;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.45;
         }
-        h1 { margin-bottom: 8px; }
-        .meta {
-            color: #6b7280;
-            margin-bottom: 24px;
+        a { color: var(--blue); }
+        h1 { margin: 0 0 6px; font-size: 1.6rem; }
+        h2 { margin: 28px 0 12px; font-size: 1.15rem; }
+        .top-nav { margin-bottom: 16px; }
+        .meta { color: var(--muted); font-size: 0.95rem; margin-bottom: 12px; }
+        .notes {
+            background: #f3f4f6;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         .btn {
             display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 10px 18px;
+            background: var(--blue);
+            color: #fff !important;
+            padding: 8px 14px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 500;
-            margin-right: 10px;
-            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border: none;
         }
-        .btn:hover { background: #1d4ed8; }
+        .btn:hover { background: var(--blue-hover); }
         .btn-secondary {
             background: #e5e7eb;
-            color: #374151;
+            color: #374151 !important;
         }
         .btn-secondary:hover { background: #d1d5db; }
-        .notes {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+        .btn-danger {
+            background: #fee2e2;
+            color: var(--red) !important;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
         }
         .empty {
-            color: #6b7280;
-            padding: 30px 0;
+            color: var(--muted);
+            padding: 28px 16px;
             text-align: center;
-            border: 2px dashed #e5e7eb;
+            border: 2px dashed var(--border);
             border-radius: 10px;
+            background: var(--card);
+        }
+        .exercise {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+        }
+        .exercise-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .exercise-title {
+            font-size: 1.1rem;
+            font-weight: 650;
+        }
+        .exercise-notes {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+        .exercise-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .sets {
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .set-row {
+            display: grid;
+            grid-template-columns: 28px 88px 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.92rem;
+            border-radius: 8px;
+            margin-top: 6px;
+        }
+        .set-row.warmup { background: var(--warmup); }
+        .set-row.work { background: var(--work); }
+        .set-row.done { background: var(--done); }
+        .set-row.pending { background: var(--pending); }
+        .set-num { color: var(--muted); font-weight: 600; }
+        .set-type { font-weight: 600; font-size: 0.85rem; }
+        .set-plan, .set-fact { color: var(--text); }
+        .set-fact strong { font-weight: 700; }
+        .set-actions { white-space: nowrap; }
+        .set-actions a {
+            text-decoration: none;
+            font-size: 0.8rem;
+            margin-left: 6px;
+        }
+        .set-actions .del { color: var(--red); }
+        .set-notes {
+            grid-column: 2 / -1;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: -2px;
+            padding-bottom: 4px;
+        }
+        .no-sets {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        @media (max-width: 640px) {
+            .set-row {
+                grid-template-columns: 24px 1fr;
+                gap: 4px 8px;
+            }
+            .set-type, .set-plan, .set-fact, .set-actions {
+                grid-column: 2;
+            }
+            .set-actions { margin-top: 2px; }
         }
     </style>
 </head>
 <body>
 
-    <a href="/" class="btn btn-secondary">← Все тренировки</a>
+    <div class="top-nav">
+        <a href="/" class="btn btn-secondary btn-sm">← Все тренировки</a>
+    </div>
 
     <h1>Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></h1>
 
     <div class="meta">
         <?php if ($workout['body_weight']): ?>
-            Вес тела: <strong><?= htmlspecialchars($workout['body_weight']) ?> <?= htmlspecialchars($workout['body_weight_unit']) ?></strong>
+            Вес тела: <strong><?= htmlspecialchars(fmt_num($workout['body_weight'])) ?> <?= htmlspecialchars($workout['body_weight_unit']) ?></strong>
             ·
         <?php endif; ?>
         Создана: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($workout['created_at']))) ?>
     </div>
 
-
-    <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-        <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary">Копировать как шаблон</a>
+    <div class="actions">
+        <a href="edit_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
+        <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Копировать</a>
         <a href="delete.php?type=workout&id=<?= (int)$workout['id'] ?>"
-        class="btn btn-secondary"
-        style="color: #b91c1c;"
-        onclick="return confirm('Удалить эту тренировку?');">Удалить тренировку</a>
-        <a href="edit_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary">Изменить</a>
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Удалить эту тренировку?');">Удалить</a>
+        <a href="add_exercise.php?workout_id=<?= (int)$workout['id'] ?>" class="btn btn-sm">+ Упражнение</a>
     </div>
 
-
     <?php if ($workout['notes']): ?>
-        <div style="background:#f9fafb; padding:16px; border-radius:8px; margin-bottom:30px;">
-            <?= nl2br(htmlspecialchars($workout['notes'])) ?>
-        </div>
+        <div class="notes"><?= nl2br(htmlspecialchars($workout['notes'])) ?></div>
     <?php endif; ?>
-
-    <a href="add_exercise.php?workout_id=<?= $workout['id'] ?>" class="btn">+ Добавить упражнение</a>
 
     <h2>Упражнения</h2>
 
     <?php if (empty($exercises)): ?>
-        <div class="empty" style="border:2px dashed #e5e7eb; border-radius:10px;">
+        <div class="empty">
             Пока нет ни одного упражнения.<br>
             Добавьте первое!
         </div>
     <?php else: ?>
         <?php foreach ($exercises as $exercise): ?>
             <?php $ex_sets = $sets_by_exercise[(int)$exercise['id']] ?? []; ?>
-            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; background: #fff;">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <div style="font-size: 18px; font-weight: 600;">
-                        <?= (int)$exercise['sort_order'] ?>. <?= htmlspecialchars($exercise['name']) ?>
+            <div class="exercise">
+                <div class="exercise-head">
+                    <div>
+                        <div class="exercise-title">
+                            <?= (int)$exercise['sort_order'] ?>. <?= htmlspecialchars($exercise['name']) ?>
+                        </div>
+                        <?php if ($exercise['notes']): ?>
+                            <div class="exercise-notes"><?= nl2br(htmlspecialchars($exercise['notes'])) ?></div>
+                        <?php endif; ?>
                     </div>
-                    <a href="add_set.php?exercise_id=<?= (int)$exercise['id'] ?>"
-                    style="display: inline-block; background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-                        + Подход
-                    </a>
-
-                    <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
-                    onclick="return confirm('Удалить упражнение и его подходы?');"
-                    style="font-size: 13px; color: #b91c1c; text-decoration: none; margin-left: 8px;">
-                        Удалить
-                    </a>
-
-                    <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>"
-                    style="font-size: 13px; color: #2563eb; text-decoration: none; margin-left: 8px;">
-                        изменить
-                    </a>
-                    
+                    <div class="exercise-actions">
+                        <a href="add_set.php?exercise_id=<?= (int)$exercise['id'] ?>" class="btn btn-sm">+ Подход</a>
+                        <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
+                        <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Удалить упражнение и его подходы?');">Удалить</a>
+                    </div>
                 </div>
 
-                <?php if ($exercise['notes']): ?>
-                    <div style="color: #6b7280; font-size: 14px; margin-top: 6px;">
-                        <?= nl2br(htmlspecialchars($exercise['notes'])) ?>
-                    </div>
-                <?php endif; ?>
-
                 <?php if (empty($ex_sets)): ?>
-                    <div style="color: #9ca3af; font-size: 14px; margin-top: 12px;">
-                        Подходов пока нет
-                    </div>
+                    <div class="no-sets">Подходов пока нет</div>
                 <?php else: ?>
-                    <div style="margin-top: 12px;">
+                    <div class="sets">
                         <?php foreach ($ex_sets as $set): ?>
-                            <div style="border-top: 1px solid #f3f4f6; padding: 10px 0; font-size: 14px;">
-                                <strong>
-                                    <?= (int)$set['sort_order'] ?>.
-                                    <?= $set['is_warmup'] ? 'Разминка' : 'Рабочий' ?>
-                                </strong>
-                                ·
-                                план:
-                                <?= $set['planned_weight'] !== null ? htmlspecialchars($set['planned_weight']) . ' кг' : '—' ?>
-                                ×
-                                <?= $set['planned_reps'] !== null ? (int)$set['planned_reps'] : '—' ?>
-                                ·
-                                факт:
-                                <?= $set['actual_weight'] !== null ? htmlspecialchars($set['actual_weight']) . ' кг' : '—' ?>
-                                ×
-                                <?= $set['actual_reps'] !== null ? (int)$set['actual_reps'] : '—' ?>
+                            <?php
+                                $has_actual = ($set['actual_weight'] !== null && $set['actual_weight'] !== '')
+                                    || ($set['actual_reps'] !== null && $set['actual_reps'] !== '');
+                                $row_class = $set['is_warmup'] ? 'warmup' : 'work';
+                                $row_class .= $has_actual ? ' done' : ' pending';
+                            ?>
+                            <div class="set-row <?= $row_class ?>">
+                                <div class="set-num"><?= (int)$set['sort_order'] ?></div>
+                                <div class="set-type"><?= $set['is_warmup'] ? 'Разминка' : 'Рабочий' ?></div>
+                                <div class="set-plan">
+                                    План: <?= htmlspecialchars(fmt_num($set['planned_weight'])) ?> кг
+                                    × <?= $set['planned_reps'] !== null ? (int)$set['planned_reps'] : '—' ?>
+                                </div>
+                                <div class="set-fact">
+                                    Факт:
+                                    <?php if ($has_actual): ?>
+                                        <strong><?= htmlspecialchars(fmt_num($set['actual_weight'])) ?> кг
+                                        × <?= $set['actual_reps'] !== null ? (int)$set['actual_reps'] : '—' ?></strong>
+                                    <?php else: ?>
+                                        <span style="color:#c2410c;">не заполнен</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="set-actions">
+                                    <a href="edit_set.php?id=<?= (int)$set['id'] ?>">изменить</a>
+                                    <a class="del" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
+                                       onclick="return confirm('Удалить этот подход?');">удалить</a>
+                                </div>
                                 <?php if ($set['notes']): ?>
-                                    <div style="color: #6b7280; margin-top: 4px;">
-                                        <?= nl2br(htmlspecialchars($set['notes'])) ?>
-                                    </div>
+                                    <div class="set-notes"><?= nl2br(htmlspecialchars($set['notes'])) ?></div>
                                 <?php endif; ?>
-
-                                <a href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
-                                onclick="return confirm('Удалить этот подход?');"
-                                style="margin-left: 8px; color: #b91c1c; text-decoration: none; font-size: 13px;">
-                                    удалить
-                                </a>
-
-                                <a href="edit_set.php?id=<?= (int)$set['id'] ?>"
-                                style="margin-left: 8px; color: #2563eb; text-decoration: none; font-size: 13px;">
-                                    изменить
-                                </a>
-                                
                             </div>
                         <?php endforeach; ?>
                     </div>
