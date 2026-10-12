@@ -31,6 +31,23 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id]);
 $exercises = $stmt->fetchAll();
 
+// Подходы по всем упражнениям тренировки
+$sets_by_exercise = [];
+if ($exercises) {
+    $exercise_ids = array_column($exercises, 'id');
+    $placeholders = implode(',', array_fill(0, count($exercise_ids), '?'));
+    $stmt = $pdo->prepare("
+        SELECT *
+        FROM sets
+        WHERE exercise_id IN ($placeholders) AND deleted_at IS NULL
+        ORDER BY sort_order ASC, id ASC
+    ");
+    $stmt->execute($exercise_ids);
+    foreach ($stmt->fetchAll() as $set) {
+        $sets_by_exercise[(int)$set['exercise_id']][] = $set;
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -116,13 +133,53 @@ $exercises = $stmt->fetchAll();
         </div>
     <?php else: ?>
         <?php foreach ($exercises as $exercise): ?>
-            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; background: #fff;">
-                <div style="font-size: 18px; font-weight: 600;">
-                    <?= (int)$exercise['sort_order'] ?>. <?= htmlspecialchars($exercise['name']) ?>
+            <?php $ex_sets = $sets_by_exercise[(int)$exercise['id']] ?? []; ?>
+            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div style="font-size: 18px; font-weight: 600;">
+                        <?= (int)$exercise['sort_order'] ?>. <?= htmlspecialchars($exercise['name']) ?>
+                    </div>
+                    <a href="add_set.php?exercise_id=<?= (int)$exercise['id'] ?>"
+                    style="display: inline-block; background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                        + Подход
+                    </a>
                 </div>
+
                 <?php if ($exercise['notes']): ?>
                     <div style="color: #6b7280; font-size: 14px; margin-top: 6px;">
                         <?= nl2br(htmlspecialchars($exercise['notes'])) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (empty($ex_sets)): ?>
+                    <div style="color: #9ca3af; font-size: 14px; margin-top: 12px;">
+                        Подходов пока нет
+                    </div>
+                <?php else: ?>
+                    <div style="margin-top: 12px;">
+                        <?php foreach ($ex_sets as $set): ?>
+                            <div style="border-top: 1px solid #f3f4f6; padding: 10px 0; font-size: 14px;">
+                                <strong>
+                                    <?= (int)$set['sort_order'] ?>.
+                                    <?= $set['is_warmup'] ? 'Разминка' : 'Рабочий' ?>
+                                </strong>
+                                ·
+                                план:
+                                <?= $set['planned_weight'] !== null ? htmlspecialchars($set['planned_weight']) . ' кг' : '—' ?>
+                                ×
+                                <?= $set['planned_reps'] !== null ? (int)$set['planned_reps'] : '—' ?>
+                                ·
+                                факт:
+                                <?= $set['actual_weight'] !== null ? htmlspecialchars($set['actual_weight']) . ' кг' : '—' ?>
+                                ×
+                                <?= $set['actual_reps'] !== null ? (int)$set['actual_reps'] : '—' ?>
+                                <?php if ($set['notes']): ?>
+                                    <div style="color: #6b7280; margin-top: 4px;">
+                                        <?= nl2br(htmlspecialchars($set['notes'])) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
