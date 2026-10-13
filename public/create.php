@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <textarea id="notes" name="notes" placeholder="Как самочувствие, что планируете..."><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
 
         <button type="submit" class="btn">Сохранить тренировку</button>
-        <a href="/public/" class="btn btn-secondary">Отмена</a>
+        <a href="/" class="btn btn-secondary">Отмена</a>
     </form>
 
 </body>
