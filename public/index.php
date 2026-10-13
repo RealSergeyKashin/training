@@ -65,7 +65,7 @@ $workouts = $stmt->fetchAll();
 
     <h1>Мои тренировки</h1>
 
-    <a href="create.php" class="btn">+ Новая тренировка</a>
+    <a href="api_create_workout.php" class="btn">+ Новая тренировка</a>
 
     <?php if (empty($workouts)): ?>
         <div class="empty">

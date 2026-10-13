@@ -308,6 +308,23 @@ function fmt_num($v) {
         .workout-edit-row input[type="number"] { width: 100px; }
         .workout-edit-row textarea { width: 100%; resize: vertical; }
 
+        .set-notes {
+            grid-column: 2 / -1;
+            padding: 0 0 4px;
+        }
+        .set-notes-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: #fff;
+            color: var(--text);
+        }
+        .set-notes-input:focus {
+            outline: none;
+            border-color: #93c5fd;
+        }
     </style>
 </head>
 <body>
@@ -436,9 +453,13 @@ function fmt_num($v) {
                                    onclick="return confirm('Удалить этот подход?');">удалить</a>
                             </div>
 
-                            <?php if ($set['notes']): ?>
-                                <div class="set-notes"><?= nl2br(htmlspecialchars($set['notes'])) ?></div>
-                            <?php endif; ?>
+                            <div class="set-notes">
+                                <input type="text"
+                                    class="js-auto set-notes-input"
+                                    data-field="notes"
+                                    placeholder="Комментарий к подходу"
+                                    value="<?= htmlspecialchars($set['notes'] ?? '') ?>">
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -449,6 +470,19 @@ function fmt_num($v) {
 
 <script>
 (function () {
+
+    (function scrollToFocus() {
+        const params = new URLSearchParams(window.location.search);
+        const focus = params.get('focus');
+        if (!focus) return;
+        const el = document.getElementById(focus);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('saved');
+            setTimeout(() => el.classList.remove('saved'), 1200);
+        }
+    })();
+
     const timers = new WeakMap();
 
     function setStatus(row, text, state) {
@@ -598,6 +632,7 @@ document.querySelectorAll('.js-add-set').forEach(btn => {
     btn.addEventListener('click', () => {
         const exerciseId = Number(btn.getAttribute('data-exercise-id'));
         btn.disabled = true;
+
         fetch('api_add_set.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -606,7 +641,9 @@ document.querySelectorAll('.js-add-set').forEach(btn => {
         .then(r => r.json())
         .then(data => {
             if (!data.ok) throw new Error('fail');
-            window.location.href = 'view.php?id=' + data.workout_id + '#set-' + data.set_id;
+            // query-параметр focus меняет URL → будет полная перезагрузка
+            window.location.href = 'view.php?id=' + data.workout_id +
+                '&focus=set-' + data.set_id;
         })
         .catch(() => {
             alert('Не удалось добавить подход');

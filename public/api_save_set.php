@@ -24,6 +24,7 @@ $allowed = [
     'planned_reps',
     'actual_reps',
     'is_warmup',
+    'notes',
 ];
 
 if ($set_id <= 0 || !in_array($field, $allowed, true)) {
@@ -57,6 +58,9 @@ if ($field === 'is_warmup') {
     } else {
         $dbValue = (int)$value;
     }
+} elseif ($field === 'notes') {
+    $dbValue = trim((string)$value);
+    $dbValue = $dbValue === '' ? null : $dbValue;
 } else {
     // weight
     if ($value === '' || $value === null) {
