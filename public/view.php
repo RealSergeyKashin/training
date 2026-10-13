@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
+require_once __DIR__ . '/../config/settings.php';
+$weight_unit = get_setting($pdo, 'weight_unit', 'kg');
+if (!in_array($weight_unit, ['kg', 'lbs'], true)) {
+    $weight_unit = 'kg';
+}
+$unit_label = $weight_unit === 'lbs' ? 'фунты' : 'кг';
+
+
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($id <= 0) {
@@ -266,6 +274,40 @@ function fmt_num($v) {
                 grid-column: 2;
             }
         }
+
+        .workout-edit {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: grid;
+            gap: 10px;
+        }
+        .workout-edit-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .workout-edit-row.full { flex-direction: column; align-items: stretch; }
+        .workout-edit-row .lbl {
+            font-size: 0.75rem;
+            color: var(--muted);
+            min-width: 72px;
+        }
+        .workout-edit-row input[type="date"],
+        .workout-edit-row input[type="number"],
+        .workout-edit-row select,
+        .workout-edit-row textarea {
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .workout-edit-row input[type="number"] { width: 100px; }
+        .workout-edit-row textarea { width: 100%; resize: vertical; }
+
     </style>
 </head>
 <body>
@@ -274,28 +316,39 @@ function fmt_num($v) {
     <a href="/" class="btn btn-secondary btn-sm">← Все тренировки</a>
 </div>
 
-<h1>Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></h1>
+<div class="workout-edit" data-workout-id="<?= (int)$workout['id'] ?>">
+    <div class="workout-edit-row">
+        <label class="lbl">Дата</label>
+        <input type="date" class="js-workout-auto" data-field="workout_date"
+               value="<?= htmlspecialchars($workout['workout_date']) ?>">
+    </div>
 
-<div class="meta">
-    <?php if ($workout['body_weight']): ?>
-        Вес тела: <strong><?= htmlspecialchars(fmt_num($workout['body_weight'])) ?> <?= htmlspecialchars($workout['body_weight_unit']) ?></strong>
-        ·
-    <?php endif; ?>
-    Создана: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($workout['created_at']))) ?>
+    <div class="workout-edit-row">
+        <label class="lbl">Вес тела</label>
+        <input type="number" class="js-workout-auto" data-field="body_weight"
+               step="0.1" min="0" placeholder="0"
+               value="<?= $workout['body_weight'] !== null ? htmlspecialchars($workout['body_weight']) : '' ?>">
+        <select id="global_weight_unit" title="Единицы для всего приложения">
+            <option value="kg" <?= $weight_unit === 'kg' ? 'selected' : '' ?>>кг</option>
+            <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фунты</option>
+        </select>
+        <span class="save-status js-workout-status"></span>
+    </div>
+
+    <div class="workout-edit-row full">
+        <label class="lbl">Комментарий</label>
+        <textarea class="js-workout-auto" data-field="notes" rows="2"
+                  placeholder="Комментарий к тренировке"><?= htmlspecialchars($workout['notes'] ?? '') ?></textarea>
+    </div>
 </div>
 
 <div class="actions">
-    <a href="edit_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
     <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Копировать</a>
     <a href="delete.php?type=workout&id=<?= (int)$workout['id'] ?>"
        class="btn btn-danger btn-sm"
        onclick="return confirm('Удалить эту тренировку?');">Удалить</a>
     <a href="add_exercise.php?workout_id=<?= (int)$workout['id'] ?>" class="btn btn-sm">+ Упражнение</a>
 </div>
-
-<?php if ($workout['notes']): ?>
-    <div class="notes"><?= nl2br(htmlspecialchars($workout['notes'])) ?></div>
-<?php endif; ?>
 
 <h2>Упражнения</h2>
 
@@ -322,7 +375,11 @@ function fmt_num($v) {
                        class="btn btn-secondary btn-sm" title="Выше">↑</a>
                     <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=down"
                        class="btn btn-secondary btn-sm" title="Ниже">↓</a>
-                    <a href="add_set.php?exercise_id=<?= (int)$exercise['id'] ?>" class="btn btn-sm">+ Подход</a>
+                    <button type="button"
+                            class="btn btn-sm js-add-set"
+                            data-exercise-id="<?= (int)$exercise['id'] ?>">
+                        + Подход
+                    </button>
                     <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
                     <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
                        class="btn btn-danger btn-sm"
@@ -353,7 +410,7 @@ function fmt_num($v) {
                             <div class="inline-fields">
                                 <span class="lbl">план</span>
                                 <input type="number" class="js-auto" data-field="planned_weight"
-                                       step="0.5" min="0" placeholder="кг"
+                                       step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
                                        value="<?= $set['planned_weight'] !== null ? htmlspecialchars($set['planned_weight']) : '' ?>">
                                 <input type="number" class="js-auto" data-field="planned_reps"
                                        step="1" min="0" placeholder="повт"
@@ -363,7 +420,7 @@ function fmt_num($v) {
                             <div class="inline-fields">
                                 <span class="lbl">факт</span>
                                 <input type="number" class="js-auto" data-field="actual_weight"
-                                       step="0.5" min="0" placeholder="кг"
+                                       step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
                                        value="<?= $set['actual_weight'] !== null ? htmlspecialchars($set['actual_weight']) : '' ?>">
                                 <input type="number" class="js-auto" data-field="actual_reps"
                                        step="1" min="0" placeholder="повт"
@@ -481,6 +538,83 @@ function fmt_num($v) {
         });
     });
 })();
+
+// --- автосохранение тренировки ---
+const workoutBox = document.querySelector('.workout-edit');
+const workoutTimers = new WeakMap();
+
+function workoutStatus(text) {
+    const el = document.querySelector('.js-workout-status');
+    if (el) el.textContent = text;
+}
+
+function saveWorkoutField(field, value) {
+    if (!workoutBox) return;
+    const id = workoutBox.getAttribute('data-workout-id');
+    workoutStatus('…');
+    fetch('api_save_workout.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(id), field: field, value: value })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.ok) throw new Error('fail');
+        workoutStatus('ок');
+        setTimeout(() => { if (document.querySelector('.js-workout-status')?.textContent === 'ок') workoutStatus(''); }, 800);
+    })
+    .catch(() => workoutStatus('ошибка'));
+}
+
+document.querySelectorAll('.js-workout-auto').forEach(el => {
+    const handler = () => {
+        const field = el.getAttribute('data-field');
+        const value = el.value;
+        clearTimeout(workoutTimers.get(el));
+        workoutTimers.set(el, setTimeout(() => saveWorkoutField(field, value), 400));
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+});
+
+// --- глобальные единицы ---
+const unitSelect = document.getElementById('global_weight_unit');
+if (unitSelect) {
+    unitSelect.addEventListener('change', () => {
+        fetch('api_save_setting.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'weight_unit', value: unitSelect.value })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) location.reload();
+        });
+    });
+}
+
+// --- добавить подход ---
+document.querySelectorAll('.js-add-set').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const exerciseId = Number(btn.getAttribute('data-exercise-id'));
+        btn.disabled = true;
+        fetch('api_add_set.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exercise_id: exerciseId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) throw new Error('fail');
+            window.location.href = 'view.php?id=' + data.workout_id + '#set-' + data.set_id;
+        })
+        .catch(() => {
+            alert('Не удалось добавить подход');
+            btn.disabled = false;
+        });
+    });
+});
+
 </script>
 </body>
 </html>
