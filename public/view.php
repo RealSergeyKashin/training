@@ -213,6 +213,36 @@ function fmt_num($v) {
             }
             .set-actions { margin-top: 2px; }
         }
+
+        .fact-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .fact-form input {
+            width: 72px;
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .fact-form button {
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .fact-form button:hover { background: var(--blue-hover); }
+        .fact-form .copy-plan {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .fact-form .copy-plan:hover { background: #d1d5db; }
     </style>
 </head>
 <body>
@@ -288,7 +318,7 @@ function fmt_num($v) {
                                 $row_class = $set['is_warmup'] ? 'warmup' : 'work';
                                 $row_class .= $has_actual ? ' done' : ' pending';
                             ?>
-                            <div class="set-row <?= $row_class ?>">
+                            <div class="set-row <?= $row_class ?>" id="set-<?= (int)$set['id'] ?>">
                                 <div class="set-num"><?= (int)$set['sort_order'] ?></div>
                                 <div class="set-type"><?= $set['is_warmup'] ? 'Разминка' : 'Рабочий' ?></div>
                                 <div class="set-plan">
@@ -296,20 +326,27 @@ function fmt_num($v) {
                                     × <?= $set['planned_reps'] !== null ? (int)$set['planned_reps'] : '—' ?>
                                 </div>
                                 <div class="set-fact">
-                                    Факт:
-                                    <?php if ($has_actual): ?>
-                                        <strong><?= htmlspecialchars(fmt_num($set['actual_weight'])) ?> кг
-                                        × <?= $set['actual_reps'] !== null ? (int)$set['actual_reps'] : '—' ?></strong>
-                                    <?php else: ?>
-                                        <span style="color:#c2410c;">не заполнен</span>
-                                    <?php endif; ?>
+                                    <form class="fact-form" method="POST" action="save_actual.php">
+                                        <input type="hidden" name="set_id" value="<?= (int)$set['id'] ?>">
+                                        <input type="hidden" name="workout_id" value="<?= (int)$workout['id'] ?>">
+                                        <input type="number" name="actual_weight" step="0.5" min="0" placeholder="кг"
+                                            value="<?= $set['actual_weight'] !== null ? htmlspecialchars($set['actual_weight']) : '' ?>">
+                                        <input type="number" name="actual_reps" step="1" min="0" placeholder="повт"
+                                            value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
+                                        <button type="submit">OK</button>
+                                        <button type="button" class="copy-plan"
+                                            data-weight="<?= htmlspecialchars((string)($set['planned_weight'] ?? '')) ?>"
+                                            data-reps="<?= htmlspecialchars((string)($set['planned_reps'] ?? '')) ?>">
+                                            = план
+                                        </button>
+                                    </form>
                                 </div>
                                 <div class="set-actions">
                                     <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=up" title="Выше">↑</a>
                                     <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=down" title="Ниже">↓</a>
-                                    <a href="edit_set.php?id=<?= (int)$set['id'] ?>">изменить</a>
+                                    <a href="edit_set.php?id=<?= (int)$set['id'] ?>">ещё</a>
                                     <a class="del" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
-                                       onclick="return confirm('Удалить этот подход?');">удалить</a>
+                                    onclick="return confirm('Удалить этот подход?');">удалить</a>
                                 </div>
                                 <?php if ($set['notes']): ?>
                                     <div class="set-notes"><?= nl2br(htmlspecialchars($set['notes'])) ?></div>
@@ -322,5 +359,16 @@ function fmt_num($v) {
         <?php endforeach; ?>
     <?php endif; ?>
 
+    <script>
+        document.querySelectorAll('.fact-form .copy-plan').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const form = btn.closest('form');
+                const w = btn.getAttribute('data-weight');
+                const r = btn.getAttribute('data-reps');
+                if (w !== '') form.querySelector('[name="actual_weight"]').value = w;
+                if (r !== '') form.querySelector('[name="actual_reps"]').value = r;
+            });
+        });
+    </script>
 </body>
 </html>
