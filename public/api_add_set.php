@@ -37,6 +37,7 @@ if (!$exercise) {
     exit;
 }
 
+// Следующий порядок
 $stmt = $pdo->prepare("
     SELECT COALESCE(MAX(sort_order), 0) + 1
     FROM sets
@@ -45,11 +46,58 @@ $stmt = $pdo->prepare("
 $stmt->execute([$exercise_id]);
 $next_order = (int)$stmt->fetchColumn();
 
+// Последний подход этого упражнения (если есть) — как шаблон
 $stmt = $pdo->prepare("
-    INSERT INTO sets (exercise_id, sort_order, is_warmup)
-    VALUES (?, ?, 0)
+    SELECT *
+    FROM sets
+    WHERE exercise_id = ? AND deleted_at IS NULL
+    ORDER BY sort_order DESC, id DESC
+    LIMIT 1
 ");
-$stmt->execute([$exercise_id, $next_order]);
+$stmt->execute([$exercise_id]);
+$prev = $stmt->fetch();
+
+if ($prev) {
+    $is_warmup = (int)$prev['is_warmup'];
+    $planned_weight = $prev['planned_weight'];
+    $planned_reps = $prev['planned_reps'];
+    if ($planned_reps === null || (int)$planned_reps < 1) {
+        $planned_reps = 1;
+    } else {
+        $planned_reps = (int)$planned_reps;
+    }
+    // Факт: вес = план, повторы = 0
+    $actual_weight = $planned_weight;
+    $actual_reps = 0;
+    $notes = null; // комментарий не копируем — это уже другая попытка
+} else {
+    // Первый подход в упражнении
+    $is_warmup = 0;          // рабочий
+    $planned_weight = null;
+    $planned_reps = 1;       // минимум 1
+    $actual_weight = null;   // плана веса ещё нет
+    $actual_reps = 0;
+    $notes = null;
+}
+
+$stmt = $pdo->prepare("
+    INSERT INTO sets (
+        exercise_id, sort_order, is_warmup,
+        planned_weight, actual_weight,
+        planned_reps, actual_reps, notes
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+");
+$stmt->execute([
+    $exercise_id,
+    $next_order,
+    $is_warmup,
+    $planned_weight,
+    $actual_weight,
+    $planned_reps,
+    $actual_reps,
+    $notes,
+]);
+
 $set_id = (int)$pdo->lastInsertId();
 
 echo json_encode([

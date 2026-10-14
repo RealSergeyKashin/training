@@ -418,10 +418,11 @@ function fmt_num($v) {
 
                             <div class="type-toggle">
                                 <input type="checkbox"
-                                       class="js-auto"
-                                       data-field="is_warmup"
-                                       <?= $set['is_warmup'] ? 'checked' : '' ?>>
-                                <span class="js-type-label"><?= $set['is_warmup'] ? 'Разминка' : 'Рабочий' ?></span>
+                                    class="js-auto"
+                                    data-field="is_warmup"
+                                    data-invert="1"
+                                    <?= !$set['is_warmup'] ? 'checked' : '' ?>>
+                                <span>Рабочий</span>
                             </div>
 
                             <div class="inline-fields">
@@ -528,11 +529,14 @@ function fmt_num($v) {
         var field = input.getAttribute('data-field');
 
         if (input.type === 'checkbox') {
-            var value = input.checked ? 1 : 0;
-            var label = row.querySelector('.js-type-label');
-            if (label) label.textContent = input.checked ? 'Разминка' : 'Рабочий';
-            row.classList.toggle('warmup', input.checked);
-            row.classList.toggle('work', !input.checked);
+            var invert = input.getAttribute('data-invert') === '1';
+            var checked = input.checked;
+            // data-field=is_warmup: в БД 1 = разминка
+            // UI: checked = рабочий → is_warmup = 0
+            var value = invert ? (checked ? 0 : 1) : (checked ? 1 : 0);
+
+            row.classList.toggle('warmup', value === 1);
+            row.classList.toggle('work', value === 0);
             saveField(row, field, value);
             return;
         }
