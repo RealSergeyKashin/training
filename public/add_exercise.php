@@ -93,93 +93,11 @@ $posted_catalog = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : null
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавить упражнение</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 0 20px;
-            color: #222;
-            line-height: 1.5;
-        }
-        h1 { margin-bottom: 8px; }
-        .meta { color: #6b7280; margin-bottom: 24px; }
-        label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 6px;
-            margin-top: 16px;
-        }
-        select, input[type="text"], textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        select:disabled {
-            background: #f3f4f6;
-            color: #9ca3af;
-            cursor: not-allowed;
-        }
-        textarea { min-height: 80px; resize: vertical; }
-        .hint { font-size: 13px; color: #6b7280; margin-top: 4px; }
-        .input-wrap {
-            position: relative;
-        }
-        .input-wrap input {
-            padding-right: 36px;
-        }
-        .clear-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: none;
-            background: #e5e7eb;
-            color: #374151;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 14px;
-            line-height: 1;
-            display: none;
-            padding: 0;
-        }
-        .clear-btn:hover { background: #d1d5db; }
-        .clear-btn.visible { display: block; }
-        .btn {
-            display: inline-block;
-            background: #2563eb;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 24px;
-        }
-        .btn:hover { background: #1d4ed8; }
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-            margin-left: 12px;
-        }
-        .btn-secondary:hover { background: #d1d5db; }
-        .error {
-            background: #fef2f2;
-            color: #b91c1c;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
+
+<div class="form-page">
 
     <h1>Добавить упражнение</h1>
     <div class="meta">
@@ -216,8 +134,10 @@ $posted_catalog = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : null
         <label for="notes">Комментарий к упражнению</label>
         <textarea id="notes" name="notes" placeholder="Опционально"><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
 
-        <button type="submit" class="btn">Сохранить упражнение</button>
-        <a href="/view.php?id=<?= $workout_id ?>" class="btn btn-secondary">Отмена</a>
+        <div class="form-actions">
+            <button type="submit" class="btn">Сохранить упражнение</button>
+            <a href="/view.php?id=<?= $workout_id ?>" class="btn btn-secondary">Отменить</a>
+        </div>
     </form>
 
     <script>
@@ -242,6 +162,6 @@ $posted_catalog = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : null
         sync();
     })();
     </script>
-
+</div>
 </body>
 </html>
