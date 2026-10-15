@@ -17,7 +17,7 @@ $workouts = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мои тренировки</title>
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/app.css?v=<?= filemtime(__DIR__ . '/assets/app.css') ?>">
 </head>
 <body>
 
@@ -40,8 +40,12 @@ $workouts = $stmt->fetchAll();
                     </div>
                     <div class="workout-meta">
                         <?php if ($workout['body_weight']): ?>
-                            Вес: <?= htmlspecialchars($workout['body_weight']) ?>
-                            <?= htmlspecialchars($workout['body_weight_unit']) ?> ·
+                            <?php
+                                $weight = rtrim(rtrim(number_format((float)$workout['body_weight'], 2, '.', ''), '0'), '.');
+                                $unit = $workout['body_weight_unit'] === 'lbs' ? 'фунты' : 'кг';
+                            ?>
+                            Вес: <?= htmlspecialchars($weight) ?>
+                            <?= htmlspecialchars($unit) ?> ·
                         <?php endif; ?>
                         Создана: <?= htmlspecialchars(date('d.m.Y H:i', strtotime($workout['created_at']))) ?>
                     </div>

@@ -59,6 +59,13 @@ function fmt_num($v) {
     }
     return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
 }
+
+function input_num($v): string {
+    if ($v === null || $v === '') {
+        return '';
+    }
+    return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -66,7 +73,7 @@ function fmt_num($v) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></title>
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/app.css?v=<?= filemtime(__DIR__ . '/assets/app.css') ?>">
 </head>
 <body>
 
@@ -85,7 +92,7 @@ function fmt_num($v) {
         <label class="lbl">Вес тела</label>
         <input type="number" class="js-workout-auto" data-field="body_weight"
                step="0.1" min="0" placeholder="0"
-               value="<?= $workout['body_weight'] !== null ? htmlspecialchars($workout['body_weight']) : '' ?>">
+               value="<?= htmlspecialchars(input_num($workout['body_weight'])) ?>">
         <select id="global_weight_unit" title="Единицы для всего приложения">
             <option value="kg" <?= $weight_unit === 'kg' ? 'selected' : '' ?>>кг</option>
             <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фунты</option>
@@ -157,20 +164,20 @@ function fmt_num($v) {
 
                             <div class="set-num"><?= (int)$set['sort_order'] ?></div>
 
-                            <div class="type-toggle">
+                            <label class="type-toggle">
                                 <input type="checkbox"
                                     class="js-auto"
                                     data-field="is_warmup"
                                     data-invert="1"
                                     <?= !$set['is_warmup'] ? 'checked' : '' ?>>
                                 <span>Рабочий</span>
-                            </div>
+                            </label>
 
                             <div class="inline-fields">
                                 <span class="lbl">план</span>
                                 <input type="number" class="js-auto" data-field="planned_weight"
                                        step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                       value="<?= $set['planned_weight'] !== null ? htmlspecialchars($set['planned_weight']) : '' ?>">
+                                       value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
                                 <input type="number" class="js-auto" data-field="planned_reps"
                                        step="1" min="0" placeholder="повт"
                                        value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
@@ -180,7 +187,7 @@ function fmt_num($v) {
                                 <span class="lbl">факт</span>
                                 <input type="number" class="js-auto" data-field="actual_weight"
                                        step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                       value="<?= $set['actual_weight'] !== null ? htmlspecialchars($set['actual_weight']) : '' ?>">
+                                       value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
                                 <input type="number" class="js-auto" data-field="actual_reps"
                                        step="1" min="0" placeholder="повт"
                                        value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">

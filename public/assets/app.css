@@ -28,7 +28,7 @@
 
 body {
     font-family: var(--font);
-    max-width: 900px;
+    max-width: 960px;
     margin: 0 auto;
     padding: 24px 16px 48px;
     color: var(--text);
@@ -99,8 +99,6 @@ h2 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 32px;
-    padding: 0 8px;
     border: none;
     border-radius: 6px;
     background: var(--gray-btn);
@@ -109,6 +107,10 @@ h2 {
     font-size: 0.75rem;
     cursor: pointer;
     white-space: nowrap;
+
+    flex-shrink: 0;
+    min-height: 36px;       /* как у полей, не выше */
+    padding: 0 8px;
 }
 .btn-plan:hover { background: var(--gray-btn-hover); }
 
@@ -203,7 +205,8 @@ select,
 textarea {
     font-family: inherit;
     font-size: 0.95rem;
-    padding: 8px 10px;
+    min-height: 36px;
+    padding: 6px 10px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     background: #fff;
@@ -226,6 +229,19 @@ textarea {
 
 .form-page {
     max-width: 600px;
+}
+
+.form-page > label {
+    display: block;
+    margin: 16px 0 6px;
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.form-page select,
+.form-page textarea,
+.form-page .input-wrap {
+    width: 100%;
 }
 
 .form-group {
@@ -370,11 +386,11 @@ select:disabled {
 }
 
 .set-row {
-    display: grid;
-    grid-template-columns: 28px 120px 1fr 1fr auto;
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    padding: 10px 8px;
+    gap: 8px 10px;
+    padding: 8px;
     border-radius: var(--radius);
     margin-top: 6px;
     font-size: 0.92rem;
@@ -389,17 +405,21 @@ select:disabled {
 .set-row.error { border-color: #fca5a5; }
 
 .set-num {
+    flex: 0 0 1.4rem;
     color: var(--muted);
     font-weight: 600;
+    text-align: right;
 }
 
 .type-toggle {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex: 0 0 auto;
+    min-height: 36px;
     font-size: 0.85rem;
     font-weight: 600;
-    min-height: var(--touch-min);
+    cursor: pointer;
 }
 
 .type-toggle input {
@@ -410,7 +430,8 @@ select:disabled {
 
 .inline-fields {
     display: flex;
-    flex-wrap: wrap;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
     gap: 6px;
     align-items: center;
 }
@@ -422,27 +443,29 @@ select:disabled {
 }
 
 .inline-fields input[type="number"] {
-    width: 72px;
+    width: 4.5rem;
     min-height: 36px;
     padding: 6px 8px;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
 .set-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 2px;
     align-items: center;
-    justify-content: flex-end;
+    margin-left: auto;
 }
 
 .set-actions a {
     text-decoration: none;
     font-size: 0.8rem;
-    min-height: 32px;
+    min-height: 36px;
     display: inline-flex;
     align-items: center;
-    padding: 0 4px;
+    padding: 0 6px;
 }
 
 .set-actions .del { color: var(--red); }
@@ -450,13 +473,13 @@ select:disabled {
 .save-status {
     font-size: 0.7rem;
     color: var(--muted);
-    min-width: 48px;
+    min-width: 1.6rem;
     text-align: right;
 }
 
 .set-notes {
-    grid-column: 2 / -1;
-    padding: 0 0 4px;
+    flex: 1 0 100%;
+    padding: 0;
 }
 
 .set-notes-input {
@@ -481,6 +504,7 @@ select:disabled {
     margin-top: 10px;
 }
 
+
 /* ===== Mobile ===== */
 @media (max-width: 720px) {
     body {
@@ -488,28 +512,20 @@ select:disabled {
     }
 
     .btn,
-    .btn-sm {
+    .btn-sm,
+    .type-toggle,
+    .inline-fields input[type="number"] {
         min-height: var(--touch-min);
     }
 
-    .set-row {
-        grid-template-columns: 24px 1fr;
-        gap: 6px 8px;
-    }
-
-    .type-toggle,
-    .inline-fields,
     .set-actions {
-        grid-column: 2;
-    }
-
-    .set-actions {
+        margin-left: 0;
+        width: 100%;
         justify-content: flex-start;
     }
 
     .inline-fields input[type="number"] {
-        width: 76px;
-        min-height: var(--touch-min);
+        width: 5rem;
         font-size: 1rem;
     }
 

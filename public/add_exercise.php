@@ -93,7 +93,7 @@ $posted_catalog = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : null
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавить упражнение</title>
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/app.css?v=<?= filemtime(__DIR__ . '/assets/app.css') ?>">
 </head>
 <body>
 
