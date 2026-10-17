@@ -319,7 +319,7 @@ function icon_pencil(): string {
 
             row.classList.toggle('warmup', value === 1);
             row.classList.toggle('work', value === 0);
-            showBubble(input.closest('.type-toggle'), value === 0 ? 'Рабочий' : 'Разминка');
+            showBubble(input.closest('.type-toggle'), value === 0 ? 'Подход назначен рабочим' : 'Подход назначен разогревочным');
             saveField(row, field, value);
             return;
         }

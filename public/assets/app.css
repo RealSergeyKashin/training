@@ -440,7 +440,7 @@ select:disabled {
 
 .set-row {
     display: grid;
-    grid-template-columns: 36px 1.4rem 2.75rem 4.5rem 4.5rem auto;
+    grid-template-columns: 36px 1.4rem max-content 4.5rem 4.5rem auto;
     grid-template-areas:
         "up num plan-lbl plan-w plan-r plan-tools"
         "down status fact-lbl fact-w fact-r fact-tools"
@@ -460,6 +460,18 @@ select:disabled {
 .set-row.saving { border-color: #93c5fd; }
 .set-row.saved { border-color: #86efac; }
 .set-row.error { border-color: #fca5a5; }
+
+.set-up,
+.set-down {
+  background: transparent;
+}
+
+.set-up:hover,
+.set-down:hover,
+.set-up:focus-visible,
+.set-down:focus-visible {
+  background: var(--gray-btn);
+}
 
 .set-up { grid-area: up; }
 .set-down { grid-area: down; }
