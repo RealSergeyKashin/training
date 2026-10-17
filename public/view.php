@@ -86,17 +86,21 @@ function icon_pencil(): string {
 </head>
 <body>
 
+<?php
+$weekdays = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+$weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
+?>
 <div class="top-nav">
-    <a href="/" class="btn btn-secondary btn-sm">← Все тренировки</a>
+    <a href="/" class="back-link">← Все тренировки</a>
 </div>
 
-<?php $workout_notes = trim((string)($workout['notes'] ?? '')); ?>
 <div class="workout-edit" data-workout-id="<?= (int)$workout['id'] ?>">
     <div class="workout-title-row">
         <h2>Тренировка</h2>
-        <input type="date" class="js-workout-auto" data-field="workout_date"
+        <input type="date" class="js-workout-auto date-ghost" data-field="workout_date"
                aria-label="Дата"
                value="<?= htmlspecialchars($workout['workout_date']) ?>">
+        <span class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></span>
     </div>
 
     <div class="workout-edit-row">
@@ -109,16 +113,12 @@ function icon_pencil(): string {
             <option value="kg" <?= $weight_unit === 'kg' ? 'selected' : '' ?>>кг</option>
             <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фнт</option>
         </select>
-        <button type="button" class="icon-btn js-workout-note" aria-label="Комментарий" title="Комментарий">T</button>
         <span class="save-status js-workout-status"></span>
     </div>
 
-    <div class="workout-notes<?= $workout_notes !== '' ? ' is-open' : '' ?>">
-        <input type="text" class="js-workout-auto workout-notes-input" data-field="notes"
-               placeholder="Комментарий к тренировке"
-               value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
-        <button type="button" class="icon-btn js-clear-workout-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
-    </div>
+    <input type="text" class="js-workout-auto workout-notes-input" data-field="notes"
+           placeholder="Комментарий к тренировке"
+           value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
 </div>
 
 <div class="actions">
@@ -415,37 +415,27 @@ function saveWorkoutField(field, value) {
     .catch(() => workoutStatus('ошибка'));
 }
 
+const weekdays = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+const weekdayEl = document.getElementById('workout-weekday');
+
+function showWeekday(value) {
+    if (!weekdayEl || !value) return;
+    const date = new Date(value + 'T00:00:00');
+    if (Number.isNaN(date.getTime())) return;
+    weekdayEl.textContent = weekdays[date.getDay()];
+}
+
 document.querySelectorAll('.js-workout-auto').forEach(el => {
     const handler = () => {
         const field = el.getAttribute('data-field');
         const value = el.value;
+        if (field === 'workout_date') showWeekday(value);
         clearTimeout(workoutTimers.get(el));
         workoutTimers.set(el, setTimeout(() => saveWorkoutField(field, value), 400));
     };
     el.addEventListener('input', handler);
     el.addEventListener('change', handler);
 });
-
-const workoutNotes = document.querySelector('.workout-notes');
-const workoutNoteInput = document.querySelector('.workout-notes-input');
-const workoutNoteBtn = document.querySelector('.js-workout-note');
-if (workoutNoteBtn && workoutNotes && workoutNoteInput) {
-    workoutNoteBtn.addEventListener('click', () => {
-        workoutNotes.classList.add('is-open');
-        workoutNoteInput.focus();
-    });
-    document.querySelector('.js-clear-workout-note').addEventListener('click', () => {
-        workoutNoteInput.value = '';
-        saveWorkoutField('notes', '');
-        workoutNotes.classList.remove('is-open');
-    });
-    workoutNoteInput.addEventListener('blur', (event) => {
-        if (workoutNoteInput.value.trim() !== '') return;
-        const next = event.relatedTarget;
-        if (next && next.classList.contains('js-clear-workout-note')) return;
-        workoutNotes.classList.remove('is-open');
-    });
-}
 
 // --- глобальные единицы ---
 const unitSelect = document.getElementById('global_weight_unit');

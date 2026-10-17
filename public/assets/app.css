@@ -125,12 +125,21 @@ h2 {
 /* ===== Layout helpers ===== */
 .top-nav { margin-bottom: 16px; }
 
+.back-link {
+    color: var(--blue);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.back-link:hover { color: var(--blue-hover); }
+
 .actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    margin: 12px 0 8px;
+    margin: 12px 0 20px;
 }
 
 .actions-main {
@@ -338,10 +347,9 @@ select:disabled {
 
 /* ===== Workout edit block ===== */
 .workout-edit {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 14px 16px;
+    background: none;
+    border: none;
+    padding: 0;
     margin-bottom: 12px;
     display: grid;
     gap: 10px;
@@ -361,16 +369,49 @@ select:disabled {
 
 .workout-title-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: baseline;
+    gap: 6px;
 }
 
 .workout-title-row h2 {
     margin: 0;
+    line-height: 1.2;
+}
+
+input[type="date"].date-ghost {
+    width: auto;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    min-height: 0;
+    height: auto;
+    line-height: 1.2;
+    font-size: 16px;
+    color: var(--text);
+}
+
+.date-ghost::-webkit-datetime-edit,
+.date-ghost::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+    line-height: 1.2;
+}
+
+.date-ghost:focus {
+    border: none;
+    box-shadow: none;
+}
+
+.weekday {
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.2;
 }
 
 .workout-edit-row .lbl {
     min-width: 0;
+    font-size: 16px;
+    color: var(--text);
 }
 
 .body-weight {
@@ -399,18 +440,8 @@ select:disabled {
     box-shadow: none;
 }
 
-.workout-notes {
-    display: none;
-    gap: 4px;
-    align-items: center;
-}
-
-.workout-notes.is-open { display: flex; }
-
 .workout-notes-input {
-    flex: 1;
-    min-width: 0;
-    width: auto;
+    width: 100%;
 }
 
 /* ===== Exercises & sets ===== */
@@ -523,8 +554,8 @@ select:disabled {
 
 .set-head {
     margin: 8px 4px 2px;
-    color: var(--muted);
-    font-size: 0.75rem;
+    color: var(--text);
+    font-size: 16px;
     font-weight: 500;
 }
 
