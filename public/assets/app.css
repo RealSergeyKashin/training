@@ -355,10 +355,9 @@ select:disabled {
 /* ===== Exercises & sets ===== */
 .exercise-head {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
 }
 
 .exercise-title {
@@ -374,9 +373,24 @@ select:disabled {
 
 .exercise-actions {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.exercise-actions-main {
+    display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     align-items: center;
+    min-width: 0;
+}
+
+.exercise-actions .btn {
+    height: 36px;
+    min-height: 36px;
+    padding: 0 10px;
 }
 
 .icon-btn {
@@ -438,15 +452,29 @@ select:disabled {
     padding-top: 4px;
 }
 
-.set-row {
+.set-head,
+.set-line {
     display: grid;
-    grid-template-columns: 36px 1.4rem max-content 4.5rem 4.5rem auto;
-    grid-template-areas:
-        "up num plan-lbl plan-w plan-r plan-tools"
-        "down status fact-lbl fact-w fact-r fact-tools"
-        "notes notes notes notes notes notes";
-    gap: 4px 6px;
+    grid-template-columns: minmax(0, 1fr) 2.35rem minmax(0, 1fr) 2.35rem auto;
+    column-gap: 4px;
     align-items: center;
+}
+
+.set-head {
+    margin: 8px 4px 2px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.set-head-plan { grid-column: 1 / 3; }
+.set-head-fact { grid-column: 3 / 5; }
+
+.set-row {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     padding: 4px;
     border-radius: var(--radius);
     margin-top: 4px;
@@ -455,46 +483,9 @@ select:disabled {
     border: 1px solid transparent;
 }
 
-.set-row.warmup { background: var(--warmup-bg); }
-.set-row.work { background: var(--work-bg); }
 .set-row.saving { border-color: #93c5fd; }
 .set-row.saved { border-color: #86efac; }
 .set-row.error { border-color: #fca5a5; }
-
-.set-up,
-.set-down {
-  background: transparent;
-}
-
-.set-up:hover,
-.set-down:hover,
-.set-up:focus-visible,
-.set-down:focus-visible {
-  background: var(--gray-btn);
-}
-
-.set-up { grid-area: up; }
-.set-down { grid-area: down; }
-
-.set-num {
-    grid-area: num;
-    color: var(--muted);
-    font-weight: 600;
-    text-align: center;
-}
-
-.set-lbl {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--muted);
-}
-
-.set-lbl-plan { grid-area: plan-lbl; }
-.set-lbl-fact { grid-area: fact-lbl; }
-.set-plan-w { grid-area: plan-w; }
-.set-plan-r { grid-area: plan-r; }
-.set-fact-w { grid-area: fact-w; font-weight: 650; }
-.set-fact-r { grid-area: fact-r; font-weight: 650; }
 
 .set-tools {
     display: flex;
@@ -503,49 +494,27 @@ select:disabled {
     align-items: center;
 }
 
-.set-tools-plan { grid-area: plan-tools; }
-.set-tools-fact { grid-area: fact-tools; }
-
 .set-row input[type="number"] {
-    width: 4.5rem;
-    min-width: 4.5rem;
-    min-height: 36px;
-    padding: 6px 8px;
-    font-size: 0.9rem;
-}
-
-.type-toggle input {
-    position: absolute;
-    inset: 0;
     width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
+    min-width: 0;
+    min-height: 36px;
+    padding: 6px 4px;
+    font-size: 16px;
+    text-align: right;
 }
 
-.type-toggle:has(input:checked) {
-    background: var(--blue);
-}
-
-.type-toggle:has(input:checked):hover {
-    background: var(--blue-hover);
-}
-
-.type-toggle:has(input:focus-visible) {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
+.set-fact { font-weight: 650; }
 
 .save-status {
-    grid-area: status;
+    position: absolute;
+    left: 6px;
+    top: 0;
     font-size: 0.7rem;
     color: var(--muted);
-    text-align: center;
+    pointer-events: none;
 }
 
 .set-notes {
-    grid-area: notes;
     display: none;
     gap: 4px;
     align-items: center;
@@ -561,7 +530,7 @@ select:disabled {
     padding: 6px 8px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 16px;
     background: #fff;
     color: var(--text);
 }
@@ -584,7 +553,7 @@ select:disabled {
         padding: 16px 12px 40px;
     }
 
-    .set-row {
-        overflow-x: auto;
+    .exercise {
+        padding: 10px 8px;
     }
 }

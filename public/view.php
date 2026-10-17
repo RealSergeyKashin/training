@@ -148,17 +148,19 @@ function icon_pencil(): string {
                     <?php endif; ?>
                 </div>
                 <div class="exercise-actions">
-                    <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=up"
-                       class="icon-btn" aria-label="Выше" title="Выше">↑</a>
-                    <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=down"
-                       class="icon-btn" aria-label="Ниже" title="Ниже">↓</a>
-                    <button type="button"
-                            class="btn btn-sm js-add-set"
-                            data-exercise-id="<?= (int)$exercise['id'] ?>">
-                        + Подход
-                    </button>
-                    <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>"
-                       class="icon-btn" aria-label="Изменить" title="Изменить"><?= icon_pencil() ?></a>
+                    <div class="exercise-actions-main">
+                        <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>"
+                           class="icon-btn" aria-label="Изменить" title="Изменить"><?= icon_pencil() ?></a>
+                        <button type="button"
+                                class="btn btn-sm js-add-set"
+                                data-exercise-id="<?= (int)$exercise['id'] ?>">
+                            + Подход
+                        </button>
+                        <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=up"
+                           class="icon-btn" aria-label="Выше" title="Выше">↑</a>
+                        <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=down"
+                           class="icon-btn" aria-label="Ниже" title="Ниже">↓</a>
+                    </div>
                     <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
                        class="icon-btn danger"
                        aria-label="Удалить упражнение"
@@ -171,53 +173,41 @@ function icon_pencil(): string {
                 <div class="no-sets">Подходов пока нет</div>
             <?php else: ?>
                 <div class="sets">
+                    <div class="set-head" aria-hidden="true">
+                        <span class="set-head-plan">План</span>
+                        <span class="set-head-fact">Факт</span>
+                    </div>
                     <?php foreach ($ex_sets as $set): ?>
-                        <?php $row_class = $set['is_warmup'] ? 'warmup' : 'work'; ?>
                         <?php $set_notes = trim((string)($set['notes'] ?? '')); ?>
-                        <div class="set-row <?= $row_class ?>"
+                        <div class="set-row"
                              id="set-<?= (int)$set['id'] ?>"
                              data-set-id="<?= (int)$set['id'] ?>">
-
-                            <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=up"
-                               class="icon-btn set-up" aria-label="Выше" title="Выше">↑</a>
-                            <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=down"
-                               class="icon-btn set-down" aria-label="Ниже" title="Ниже">↓</a>
-
-                            <div class="set-num"><?= (int)$set['sort_order'] ?></div>
+                            <div class="set-line">
+                                <input type="number" class="js-auto set-w" data-field="planned_weight"
+                                       inputmode="decimal" step="0.5" min="0"
+                                       aria-label="План, вес"
+                                       value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
+                                <input type="number" class="js-auto set-r" data-field="planned_reps"
+                                       inputmode="numeric" step="1" min="0"
+                                       aria-label="План, повторы"
+                                       value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
+                                <input type="number" class="js-auto set-w set-fact" data-field="actual_weight"
+                                       inputmode="decimal" step="0.5" min="0"
+                                       aria-label="Факт, вес"
+                                       value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
+                                <input type="number" class="js-auto set-r set-fact" data-field="actual_reps"
+                                       inputmode="numeric" step="1" min="0"
+                                       aria-label="Факт, повторы"
+                                       value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
+                                <div class="set-tools">
+                                    <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
+                                    <button type="button" class="icon-btn js-add-note" aria-label="Комментарий" title="Комментарий">T</button>
+                                    <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
+                                       aria-label="Удалить подход" title="Удалить подход"
+                                       onclick="return confirm('Удалить этот подход?');"><?= icon_trash() ?></a>
+                                </div>
+                            </div>
                             <span class="save-status js-status"></span>
-
-                            <span class="set-lbl set-lbl-plan">План</span>
-                            <input type="number" class="js-auto set-plan-w" data-field="planned_weight"
-                                   step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                   value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
-                            <input type="number" class="js-auto set-plan-r" data-field="planned_reps"
-                                   step="1" min="0" placeholder="повт"
-                                   value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
-                            <div class="set-tools set-tools-plan">
-                                <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
-                                   aria-label="Удалить подход" title="Удалить подход"
-                                   onclick="return confirm('Удалить этот подход?');"><?= icon_trash() ?></a>
-                                <label class="icon-btn type-toggle">
-                                    <input type="checkbox"
-                                        class="js-auto"
-                                        data-field="is_warmup"
-                                        data-invert="1"
-                                        aria-label="Рабочий"
-                                        <?= !$set['is_warmup'] ? 'checked' : '' ?>>
-                                </label>
-                            </div>
-
-                            <span class="set-lbl set-lbl-fact">Факт</span>
-                            <input type="number" class="js-auto set-fact-w" data-field="actual_weight"
-                                   step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                   value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
-                            <input type="number" class="js-auto set-fact-r" data-field="actual_reps"
-                                   step="1" min="0" placeholder="повт"
-                                   value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
-                            <div class="set-tools set-tools-fact">
-                                <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
-                                <button type="button" class="icon-btn js-add-note" aria-label="Комментарий" title="Комментарий">T</button>
-                            </div>
 
                             <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
                                 <input type="text"
