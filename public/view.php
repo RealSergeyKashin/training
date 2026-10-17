@@ -66,6 +66,18 @@ function input_num($v): string {
     }
     return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
 }
+
+function icon_trash(): string {
+    return '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">'
+        . '<path d="M3 4h8M5.5 4V3h3v1M4.5 4.5l.5 7h4l.5-7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>'
+        . '</svg>';
+}
+
+function icon_pencil(): string {
+    return '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">'
+        . '<path d="M8.2 2.2l3.6 3.6L5 12.6H1.4V9z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>'
+        . '</svg>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -137,18 +149,21 @@ function input_num($v): string {
                 </div>
                 <div class="exercise-actions">
                     <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=up"
-                       class="btn btn-secondary btn-sm" title="Выше">↑</a>
+                       class="icon-btn" aria-label="Выше" title="Выше">↑</a>
                     <a href="reorder.php?type=exercise&id=<?= (int)$exercise['id'] ?>&dir=down"
-                       class="btn btn-secondary btn-sm" title="Ниже">↓</a>
+                       class="icon-btn" aria-label="Ниже" title="Ниже">↓</a>
                     <button type="button"
                             class="btn btn-sm js-add-set"
                             data-exercise-id="<?= (int)$exercise['id'] ?>">
                         + Подход
                     </button>
-                    <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>" class="btn btn-secondary btn-sm">Изменить</a>
+                    <a href="edit_exercise.php?id=<?= (int)$exercise['id'] ?>"
+                       class="icon-btn" aria-label="Изменить" title="Изменить"><?= icon_pencil() ?></a>
                     <a href="delete.php?type=exercise&id=<?= (int)$exercise['id'] ?>"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Удалить упражнение и его подходы?');">Удалить</a>
+                       class="icon-btn danger"
+                       aria-label="Удалить упражнение"
+                       title="Удалить упражнение"
+                       onclick="return confirm('Удалить упражнение и его подходы?');"><?= icon_trash() ?></a>
                 </div>
             </div>
 
@@ -158,56 +173,59 @@ function input_num($v): string {
                 <div class="sets">
                     <?php foreach ($ex_sets as $set): ?>
                         <?php $row_class = $set['is_warmup'] ? 'warmup' : 'work'; ?>
+                        <?php $set_notes = trim((string)($set['notes'] ?? '')); ?>
                         <div class="set-row <?= $row_class ?>"
                              id="set-<?= (int)$set['id'] ?>"
                              data-set-id="<?= (int)$set['id'] ?>">
 
+                            <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=up"
+                               class="icon-btn set-up" aria-label="Выше" title="Выше">↑</a>
+                            <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=down"
+                               class="icon-btn set-down" aria-label="Ниже" title="Ниже">↓</a>
+
                             <div class="set-num"><?= (int)$set['sort_order'] ?></div>
+                            <span class="save-status js-status"></span>
 
-                            <label class="type-toggle">
-                                <input type="checkbox"
-                                    class="js-auto"
-                                    data-field="is_warmup"
-                                    data-invert="1"
-                                    <?= !$set['is_warmup'] ? 'checked' : '' ?>>
-                                <span>Рабочий</span>
-                            </label>
-
-                            <div class="inline-fields">
-                                <span class="lbl">план</span>
-                                <input type="number" class="js-auto" data-field="planned_weight"
-                                       step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                       value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
-                                <input type="number" class="js-auto" data-field="planned_reps"
-                                       step="1" min="0" placeholder="повт"
-                                       value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
+                            <span class="set-lbl set-lbl-plan">План</span>
+                            <input type="number" class="js-auto set-plan-w" data-field="planned_weight"
+                                   step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
+                                   value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
+                            <input type="number" class="js-auto set-plan-r" data-field="planned_reps"
+                                   step="1" min="0" placeholder="повт"
+                                   value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
+                            <div class="set-tools set-tools-plan">
+                                <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
+                                   aria-label="Удалить подход" title="Удалить подход"
+                                   onclick="return confirm('Удалить этот подход?');"><?= icon_trash() ?></a>
+                                <label class="icon-btn type-toggle">
+                                    <input type="checkbox"
+                                        class="js-auto"
+                                        data-field="is_warmup"
+                                        data-invert="1"
+                                        aria-label="Рабочий"
+                                        <?= !$set['is_warmup'] ? 'checked' : '' ?>>
+                                </label>
                             </div>
 
-                            <div class="inline-fields">
-                                <span class="lbl">факт</span>
-                                <input type="number" class="js-auto" data-field="actual_weight"
-                                       step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
-                                       value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
-                                <input type="number" class="js-auto" data-field="actual_reps"
-                                       step="1" min="0" placeholder="повт"
-                                       value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
-                                <button type="button" class="btn-plan js-copy-plan" title="Подставить план в факт">= план</button>
+                            <span class="set-lbl set-lbl-fact">Факт</span>
+                            <input type="number" class="js-auto set-fact-w" data-field="actual_weight"
+                                   step="0.5" min="0" placeholder="<?= htmlspecialchars($unit_label) ?>"
+                                   value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
+                            <input type="number" class="js-auto set-fact-r" data-field="actual_reps"
+                                   step="1" min="0" placeholder="повт"
+                                   value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
+                            <div class="set-tools set-tools-fact">
+                                <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
+                                <button type="button" class="icon-btn js-add-note" aria-label="Комментарий" title="Комментарий">T</button>
                             </div>
 
-                            <div class="set-actions">
-                                <span class="save-status js-status"></span>
-                                <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=up" title="Выше">↑</a>
-                                <a href="reorder.php?type=set&id=<?= (int)$set['id'] ?>&dir=down" title="Ниже">↓</a>
-                                <a class="del" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
-                                   onclick="return confirm('Удалить этот подход?');">удалить</a>
-                            </div>
-
-                            <div class="set-notes">
+                            <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
                                 <input type="text"
                                     class="js-auto set-notes-input"
                                     data-field="notes"
                                     placeholder="Комментарий к подходу"
                                     value="<?= htmlspecialchars($set['notes'] ?? '') ?>">
+                                <button type="button" class="icon-btn js-clear-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -270,6 +288,22 @@ function input_num($v): string {
         });
     }
 
+    function showBubble(anchor, text) {
+        if (!anchor) return;
+        var bubble = anchor.querySelector('.bubble');
+        if (!bubble) {
+            bubble = document.createElement('span');
+            bubble.className = 'bubble';
+            anchor.appendChild(bubble);
+        }
+        bubble.textContent = text;
+        bubble.classList.add('show');
+        clearTimeout(bubble._hide);
+        bubble._hide = setTimeout(function () {
+            bubble.classList.remove('show');
+        }, 2000);
+    }
+
     function scheduleSave(input) {
         var row = input.closest('.set-row');
         if (!row) return;
@@ -285,6 +319,7 @@ function input_num($v): string {
 
             row.classList.toggle('warmup', value === 1);
             row.classList.toggle('work', value === 0);
+            showBubble(input.closest('.type-toggle'), value === 0 ? 'Рабочий' : 'Разминка');
             saveField(row, field, value);
             return;
         }
@@ -321,6 +356,41 @@ function input_num($v): string {
                 actR.value = planR.value;
                 scheduleSave(actR);
             }
+            showBubble(btn, 'План подставлен');
+        });
+    });
+
+    document.querySelectorAll('.js-add-note').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var row = btn.closest('.set-row');
+            var notes = row.querySelector('.set-notes');
+            var input = row.querySelector('.set-notes-input');
+            notes.classList.add('is-open');
+            showBubble(btn, 'Комментарий');
+            if (input) input.focus();
+        });
+    });
+
+    document.querySelectorAll('.js-clear-note').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var row = btn.closest('.set-row');
+            var notes = row.querySelector('.set-notes');
+            var input = row.querySelector('.set-notes-input');
+            if (input) {
+                input.value = '';
+                scheduleSave(input);
+            }
+            notes.classList.remove('is-open');
+        });
+    });
+
+    document.querySelectorAll('.set-notes-input').forEach(function (input) {
+        input.addEventListener('blur', function (event) {
+            if (input.value.trim() !== '') return;
+            var next = event.relatedTarget;
+            if (next && next.classList.contains('js-clear-note')) return;
+            var notes = input.closest('.set-notes');
+            if (notes) notes.classList.remove('is-open');
         });
     });
 })();
