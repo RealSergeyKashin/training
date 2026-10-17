@@ -65,14 +65,15 @@ function input_num($v): string {
 }
 
 function icon_trash(): string {
-    return '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">'
-        . '<path d="M3 4h8M5.5 4V3h3v1M4.5 4.5l.5 7h4l.5-7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>'
+    return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+        . '<path d="M2.4 4.2h11.2M6.1 4.2V2.5h3.8v1.7M3.6 4.2l.8 9.3h7.2l.8-9.3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'
         . '</svg>';
 }
 
 function icon_pencil(): string {
     return '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">'
-        . '<path d="M8.2 2.2l3.6 3.6L5 12.6H1.4V9z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>'
+        . '<path d="M1 13.1l2.5-1.1 8.2-8.2-1.6-1.6L1.9 10.4z" fill="none" stroke="#1f2937" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>'
+        . '<path d="M1.9 10.4L3.5 12" fill="none" stroke="#1f2937" stroke-width="1.2" stroke-linecap="round"/>'
         . '</svg>';
 }
 ?>
@@ -98,7 +99,7 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
 <div class="workout-edit" data-workout-id="<?= (int)$workout['id'] ?>">
     <div class="workout-title-row">
         <h2>Тренировка</h2>
-        <input type="date" id="workout-date" class="js-workout-auto date-ghost" data-field="workout_date"
+        <input type="date" id="workout-date" name="workout_date" class="js-workout-auto date-ghost" data-field="workout_date"
                aria-label="Дата"
                value="<?= htmlspecialchars($workout['workout_date']) ?>">
         <label for="workout-date" class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></label>
@@ -106,21 +107,23 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
 
     <div class="workout-edit-row">
         <label class="lbl">Вес тела</label>
-        <input type="number" class="js-workout-auto body-weight" data-field="body_weight"
+        <input type="number" id="body-weight" name="body_weight" class="js-workout-auto body-weight" data-field="body_weight"
                inputmode="decimal" step="0.1" min="0"
                aria-label="Вес тела"
                value="<?= htmlspecialchars(input_num($workout['body_weight'])) ?>">
-        <select id="global_weight_unit" class="unit-ghost" title="Единицы для всего приложения">
+        <select id="global_weight_unit" name="weight_unit" class="unit-ghost" title="Единицы для всего приложения">
             <option value="kg" <?= $weight_unit === 'kg' ? 'selected' : '' ?>>кг</option>
             <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фнт</option>
         </select>
         <span class="save-status js-workout-status"></span>
     </div>
 
-    <div class="note-line">
-        <textarea class="js-workout-auto workout-notes-input plain-note" data-field="notes" rows="1"
+    <div class="note-line<?= trim((string)($workout['notes'] ?? '')) === '' ? ' is-empty' : '' ?>">
+        <div class="note-read">
+            <span class="note-text"><?= htmlspecialchars(trim((string)($workout['notes'] ?? '')) === '' ? 'Комментарий к тренировке' : $workout['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+        </div>
+        <textarea id="workout-notes" name="workout_notes" class="js-workout-auto workout-notes-input plain-note" data-field="notes" rows="1"
                   placeholder="Комментарий к тренировке"><?= htmlspecialchars($workout['notes'] ?? '') ?></textarea>
-        <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
         <button type="button" class="icon-btn note-clear js-clear-note" aria-label="Очистить комментарий" title="Очистить комментарий">×</button>
     </div>
 </div>
@@ -188,7 +191,10 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
                         </div>
                     </div>
                     <?php foreach ($ex_sets as $set): ?>
-                        <?php $set_notes = trim((string)($set['notes'] ?? '')); ?>
+                        <?php
+                            $set_notes = trim((string)($set['notes'] ?? ''));
+                            $sid = (int)$set['id'];
+                        ?>
                         <div class="set-row"
                              id="set-<?= (int)$set['id'] ?>"
                              data-set-id="<?= (int)$set['id'] ?>">
@@ -204,28 +210,32 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
                                     </svg>
                                 </button>
                                 <div class="set-main">
-                                    <input type="number" class="js-auto set-w" data-field="planned_weight"
+                                    <input type="number" id="set-<?= $sid ?>-planned-weight" name="set-<?= $sid ?>-planned-weight"
+                                           class="js-auto set-w" data-field="planned_weight"
                                            inputmode="decimal" step="0.5" min="0"
                                            placeholder="<?= htmlspecialchars($unit_short) ?>"
                                            aria-label="План, вес"
                                            value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
-                                    <input type="number" class="js-auto set-r" data-field="planned_reps"
+                                    <input type="number" id="set-<?= $sid ?>-planned-reps" name="set-<?= $sid ?>-planned-reps"
+                                           class="js-auto set-r" data-field="planned_reps"
                                            inputmode="numeric" step="1" min="0"
                                            placeholder="×"
                                            aria-label="План, повторы"
                                            value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
-                                    <input type="number" class="js-auto set-w set-fact" data-field="actual_weight"
+                                    <input type="number" id="set-<?= $sid ?>-actual-weight" name="set-<?= $sid ?>-actual-weight"
+                                           class="js-auto set-w set-fact" data-field="actual_weight"
                                            inputmode="decimal" step="0.5" min="0"
                                            placeholder="<?= htmlspecialchars($unit_short) ?>"
                                            aria-label="Факт, вес"
                                            value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
-                                    <input type="number" class="js-auto set-r set-fact" data-field="actual_reps"
+                                    <input type="number" id="set-<?= $sid ?>-actual-reps" name="set-<?= $sid ?>-actual-reps"
+                                           class="js-auto set-r set-fact" data-field="actual_reps"
                                            inputmode="numeric" step="1" min="0"
                                            placeholder="×"
                                            aria-label="Факт, повторы"
                                            value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
                                     <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
-                                    <button type="button" class="icon-btn js-add-note<?= $set_notes !== '' ? ' is-hidden' : '' ?>" aria-label="Комментарий" title="Комментарий">T</button>
+                                    <button type="button" class="icon-btn js-add-note<?= $set_notes !== '' ? ' is-hidden' : '' ?>" aria-label="Комментарий" title="Комментарий"><?= icon_pencil() ?></button>
                                 </div>
                                 <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
                                    aria-label="Удалить подход" title="Удалить подход"
@@ -234,10 +244,13 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
                             <span class="save-status js-status"></span>
 
                             <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
-                                <div class="note-line">
-                                    <textarea class="js-auto set-notes-input plain-note" data-field="notes" rows="1"
+                                <div class="note-line<?= $set_notes === '' ? ' is-empty' : '' ?>">
+                                    <div class="note-read">
+                                        <span class="note-text"><?= htmlspecialchars($set_notes === '' ? 'Комментарий к подходу' : $set['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+                                    </div>
+                                    <textarea id="set-<?= $sid ?>-notes" name="set-<?= $sid ?>-notes"
+                                              class="js-auto set-notes-input plain-note" data-field="notes" rows="1"
                                               placeholder="Комментарий к подходу"><?= htmlspecialchars($set['notes'] ?? '') ?></textarea>
-                                    <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
                                     <button type="button" class="icon-btn note-clear js-clear-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
                                 </div>
                                 <span class="note-gap" aria-hidden="true"></span>
@@ -396,6 +409,7 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
             var input = line && line.querySelector('textarea');
             if (!input) return;
             input.value = '';
+            if (typeof syncNoteRead === 'function') syncNoteRead(input);
             if (typeof fitNote === 'function') fitNote(input);
             var row = btn.closest('.set-row');
             if (!row) {
@@ -507,14 +521,32 @@ if (unitSelect) {
     });
 }
 
+function syncNoteRead(el) {
+    const line = el.closest('.note-line');
+    if (!line) return;
+    const text = line.querySelector('.note-text');
+    const empty = el.value.trim() === '';
+    if (text) text.textContent = empty ? (el.getAttribute('placeholder') || '') : el.value;
+    line.classList.toggle('is-empty', empty);
+}
+
 function fitNote(el) {
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
 }
 
 document.querySelectorAll('textarea.plain-note').forEach(function (el) {
-    fitNote(el);
-    el.addEventListener('input', function () { fitNote(el); });
+    const line = el.closest('.note-line');
+    if (line) {
+        line.addEventListener('click', function (event) {
+            if (event.target.closest('.note-clear')) return;
+            el.focus();
+        });
+    }
+    el.addEventListener('input', function () {
+        syncNoteRead(el);
+        fitNote(el);
+    });
     el.addEventListener('focus', function () { fitNote(el); });
 });
 
@@ -532,26 +564,39 @@ document.querySelectorAll('.set-grip').forEach(function (grip) {
         const startOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
             return item.getAttribute('data-set-id');
         }).join(',');
+        const rect = row.getBoundingClientRect();
+        const offsetY = event.clientY - rect.top;
         let active = false;
+        let placeholder = null;
         try { grip.setPointerCapture(event.pointerId); } catch (err) {}
+
+        function placeGap(clientY) {
+            const rows = [...list.querySelectorAll('.set-row')];
+            for (let i = 0; i < rows.length; i++) {
+                const box = rows[i].getBoundingClientRect();
+                if (clientY < box.top + box.height / 2) {
+                    rows[i].before(placeholder);
+                    return;
+                }
+            }
+            list.appendChild(placeholder);
+        }
 
         function move(e) {
             if (e.pointerId !== event.pointerId) return;
-            if (!active && Math.abs(e.clientY - event.clientY) < 6) return;
-            active = true;
-            row.classList.add('is-dragging');
-            const rows = [...list.querySelectorAll('.set-row')];
-            let before = null;
-            for (let i = 0; i < rows.length; i++) {
-                if (rows[i] === row) continue;
-                const box = rows[i].getBoundingClientRect();
-                if (e.clientY < box.top + box.height / 2) {
-                    before = rows[i];
-                    break;
-                }
+            if (!active) {
+                if (Math.abs(e.clientY - event.clientY) < 4) return;
+                active = true;
+                placeholder = document.createElement('div');
+                placeholder.className = 'set-placeholder';
+                placeholder.style.height = rect.height + 'px';
+                row.before(placeholder);
+                row.classList.add('is-dragging');
+                row.style.width = rect.width + 'px';
+                row.style.left = rect.left + 'px';
             }
-            if (before) list.insertBefore(row, before);
-            else list.appendChild(row);
+            row.style.top = (e.clientY - offsetY) + 'px';
+            placeGap(e.clientY);
         }
 
         function end(e) {
@@ -559,7 +604,11 @@ document.querySelectorAll('.set-grip').forEach(function (grip) {
             grip.removeEventListener('pointermove', move);
             grip.removeEventListener('pointerup', end);
             grip.removeEventListener('pointercancel', end);
+            if (placeholder) placeholder.replaceWith(row);
             row.classList.remove('is-dragging');
+            row.style.width = '';
+            row.style.left = '';
+            row.style.top = '';
             if (!active) return;
             const nextOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
                 return item.getAttribute('data-set-id');

@@ -249,6 +249,13 @@ input[type="number"]::-webkit-inner-spin-button {
     margin: 0;
 }
 
+input:hover:not(:focus):not(.date-ghost),
+textarea:hover:not(:focus):not(.plain-note),
+select:hover:not(:focus):not(.unit-ghost) {
+    border-color: #9ca3af;
+    background: #fafafa;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -604,7 +611,16 @@ input[type="date"].date-ghost {
 .set-grip:active { cursor: grabbing; }
 
 .set-row.is-dragging {
-    opacity: 0.65;
+    position: fixed;
+    z-index: 20;
+    margin: 0;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.set-placeholder {
+    margin-top: 4px;
+    border-radius: var(--radius);
+    border: 1px dashed var(--border-strong);
 }
 
 .set-head .set-w,
@@ -647,53 +663,103 @@ input[type="date"].date-ghost {
 
 .note-line {
     position: relative;
+    display: inline-block;
     min-width: 0;
     max-width: 100%;
+    vertical-align: top;
+    border-radius: var(--radius);
+}
+
+.note-line:hover:not(:focus-within) {
+    background: rgba(17, 24, 39, 0.04);
+    box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.04), inset 0 0 0 1px var(--border-strong);
+}
+
+.note-line:focus-within {
+    display: block;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
 }
 
 .set-notes .note-line {
-    flex: 1;
+    flex: 0 1 auto;
     max-width: calc(100% - 40px);
 }
 
-textarea.plain-note {
-    display: block;
+.set-notes:focus-within .note-line {
+    flex: 1;
     width: 100%;
-    min-height: 24px;
-    height: auto;
+}
+
+.note-read {
+    white-space: pre-wrap;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.note-line.is-empty .note-text { color: #9ca3af; }
+
+.note-line:focus-within .note-read { display: none; }
+
+textarea.plain-note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    padding: 0;
+    border: 0;
     resize: none;
     overflow: hidden;
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
-    padding: 2px 22px 2px 0;
-    line-height: 1.35;
+    pointer-events: none;
 }
 
 .note-line:focus-within textarea.plain-note {
+    position: static;
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    height: auto;
+    opacity: 1;
+    pointer-events: auto;
+    overflow: hidden;
     padding: 6px 40px 6px 8px;
-    border-color: #93c5fd;
+    border: 1px solid #93c5fd;
+    border-radius: var(--radius);
     background: #fff;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.note-pencil,
-.note-clear {
-    position: absolute;
-    right: 0;
-    bottom: 2px;
-    color: var(--muted);
+    line-height: 1.35;
 }
 
 .note-pencil {
     display: inline-flex;
+    margin-left: 4px;
+    vertical-align: -2px;
+    color: var(--muted);
     pointer-events: none;
 }
 
 .note-clear { display: none; }
 
+.icon-btn.note-clear,
+.icon-btn.note-clear:hover {
+    background: transparent;
+    color: var(--muted);
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+}
+
 .note-line:focus-within .note-pencil { display: none; }
-.note-line:focus-within .note-clear { display: inline-flex; }
+
+.note-line:focus-within .note-clear {
+    display: inline-flex;
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+}
 
 .note-gap {
     width: 36px;
@@ -703,7 +769,7 @@ textarea.plain-note {
     flex-shrink: 0;
 }
 
-.workout-edit .note-line { flex: none; width: 100%; }
+.workout-edit .note-line { max-width: 100%; }
 
 .set-w { width: 4rem; text-align: right; }
 
@@ -724,6 +790,11 @@ input.set-r:not(.set-fact) {
 .set-row input::placeholder {
     color: #9ca3af;
     opacity: 1;
+    font-weight: 400;
+}
+
+.set-row input:focus::placeholder {
+    color: transparent;
 }
 
 .set-fact { font-weight: 650; }
