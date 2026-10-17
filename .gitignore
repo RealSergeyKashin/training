@@ -7,6 +7,7 @@
 /vendor/
 .env
 .env.local
+config/local.php
 
 # Логи
 *.log

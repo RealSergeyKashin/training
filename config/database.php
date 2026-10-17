@@ -6,6 +6,11 @@ $user = 'root';
 $pass = '';          // пароль пустой
 $charset = 'utf8mb4';
 
+$local = __DIR__ . '/local.php';
+if (is_file($local)) {
+    require $local;
+}
+
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 
 $options = [
