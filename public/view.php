@@ -6,9 +6,6 @@ $weight_unit = get_setting($pdo, 'weight_unit', 'kg');
 if (!in_array($weight_unit, ['kg', 'lbs'], true)) {
     $weight_unit = 'kg';
 }
-$unit_label = $weight_unit === 'lbs' ? 'фунты' : 'кг';
-
-
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($id <= 0) {
@@ -93,41 +90,46 @@ function icon_pencil(): string {
     <a href="/" class="btn btn-secondary btn-sm">← Все тренировки</a>
 </div>
 
+<?php $workout_notes = trim((string)($workout['notes'] ?? '')); ?>
 <div class="workout-edit" data-workout-id="<?= (int)$workout['id'] ?>">
-    <div class="workout-edit-row">
-        <label class="lbl">Дата</label>
+    <div class="workout-title-row">
+        <h2>Тренировка</h2>
         <input type="date" class="js-workout-auto" data-field="workout_date"
+               aria-label="Дата"
                value="<?= htmlspecialchars($workout['workout_date']) ?>">
     </div>
 
     <div class="workout-edit-row">
         <label class="lbl">Вес тела</label>
-        <input type="number" class="js-workout-auto" data-field="body_weight"
-               step="0.1" min="0" placeholder="0"
+        <input type="number" class="js-workout-auto body-weight" data-field="body_weight"
+               inputmode="decimal" step="0.1" min="0"
+               aria-label="Вес тела"
                value="<?= htmlspecialchars(input_num($workout['body_weight'])) ?>">
-        <select id="global_weight_unit" title="Единицы для всего приложения">
+        <select id="global_weight_unit" class="unit-ghost" title="Единицы для всего приложения">
             <option value="kg" <?= $weight_unit === 'kg' ? 'selected' : '' ?>>кг</option>
-            <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фунты</option>
+            <option value="lbs" <?= $weight_unit === 'lbs' ? 'selected' : '' ?>>фнт</option>
         </select>
+        <button type="button" class="icon-btn js-workout-note" aria-label="Комментарий" title="Комментарий">T</button>
         <span class="save-status js-workout-status"></span>
     </div>
 
-    <div class="workout-edit-row full">
-        <label class="lbl">Комментарий</label>
-        <textarea class="js-workout-auto" data-field="notes" rows="2"
-                  placeholder="Комментарий к тренировке"><?= htmlspecialchars($workout['notes'] ?? '') ?></textarea>
+    <div class="workout-notes<?= $workout_notes !== '' ? ' is-open' : '' ?>">
+        <input type="text" class="js-workout-auto workout-notes-input" data-field="notes"
+               placeholder="Комментарий к тренировке"
+               value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
+        <button type="button" class="icon-btn js-clear-workout-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
     </div>
 </div>
 
 <div class="actions">
-    <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Копировать</a>
+    <div class="actions-main">
+        <a href="add_exercise.php?workout_id=<?= (int)$workout['id'] ?>" class="btn btn-sm">+ Упражнение</a>
+        <a href="copy_workout.php?id=<?= (int)$workout['id'] ?>" class="btn btn-secondary btn-sm">Дублировать</a>
+    </div>
     <a href="delete.php?type=workout&id=<?= (int)$workout['id'] ?>"
        class="btn btn-danger btn-sm"
        onclick="return confirm('Удалить эту тренировку?');">Удалить</a>
-    <a href="add_exercise.php?workout_id=<?= (int)$workout['id'] ?>" class="btn btn-sm">+ Упражнение</a>
 </div>
-
-<h2>Упражнения</h2>
 
 <?php if (empty($exercises)): ?>
     <div class="empty">
@@ -174,8 +176,9 @@ function icon_pencil(): string {
             <?php else: ?>
                 <div class="sets">
                     <div class="set-head" aria-hidden="true">
-                        <span class="set-head-plan">План</span>
-                        <span class="set-head-fact">Факт</span>
+                        <span class="set-w">План</span>
+                        <span class="set-r"></span>
+                        <span class="set-w">Факт</span>
                     </div>
                     <?php foreach ($ex_sets as $set): ?>
                         <?php $set_notes = trim((string)($set['notes'] ?? '')); ?>
@@ -183,29 +186,29 @@ function icon_pencil(): string {
                              id="set-<?= (int)$set['id'] ?>"
                              data-set-id="<?= (int)$set['id'] ?>">
                             <div class="set-line">
-                                <input type="number" class="js-auto set-w" data-field="planned_weight"
-                                       inputmode="decimal" step="0.5" min="0"
-                                       aria-label="План, вес"
-                                       value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
-                                <input type="number" class="js-auto set-r" data-field="planned_reps"
-                                       inputmode="numeric" step="1" min="0"
-                                       aria-label="План, повторы"
-                                       value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
-                                <input type="number" class="js-auto set-w set-fact" data-field="actual_weight"
-                                       inputmode="decimal" step="0.5" min="0"
-                                       aria-label="Факт, вес"
-                                       value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
-                                <input type="number" class="js-auto set-r set-fact" data-field="actual_reps"
-                                       inputmode="numeric" step="1" min="0"
-                                       aria-label="Факт, повторы"
-                                       value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
-                                <div class="set-tools">
+                                <div class="set-main">
+                                    <input type="number" class="js-auto set-w" data-field="planned_weight"
+                                           inputmode="decimal" step="0.5" min="0"
+                                           aria-label="План, вес"
+                                           value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
+                                    <input type="number" class="js-auto set-r" data-field="planned_reps"
+                                           inputmode="numeric" step="1" min="0"
+                                           aria-label="План, повторы"
+                                           value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
+                                    <input type="number" class="js-auto set-w set-fact" data-field="actual_weight"
+                                           inputmode="decimal" step="0.5" min="0"
+                                           aria-label="Факт, вес"
+                                           value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
+                                    <input type="number" class="js-auto set-r set-fact" data-field="actual_reps"
+                                           inputmode="numeric" step="1" min="0"
+                                           aria-label="Факт, повторы"
+                                           value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
                                     <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
                                     <button type="button" class="icon-btn js-add-note" aria-label="Комментарий" title="Комментарий">T</button>
-                                    <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
-                                       aria-label="Удалить подход" title="Удалить подход"
-                                       onclick="return confirm('Удалить этот подход?');"><?= icon_trash() ?></a>
                                 </div>
+                                <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
+                                   aria-label="Удалить подход" title="Удалить подход"
+                                   onclick="return confirm('Удалить этот подход?');"><?= icon_trash() ?></a>
                             </div>
                             <span class="save-status js-status"></span>
 
@@ -422,6 +425,27 @@ document.querySelectorAll('.js-workout-auto').forEach(el => {
     el.addEventListener('input', handler);
     el.addEventListener('change', handler);
 });
+
+const workoutNotes = document.querySelector('.workout-notes');
+const workoutNoteInput = document.querySelector('.workout-notes-input');
+const workoutNoteBtn = document.querySelector('.js-workout-note');
+if (workoutNoteBtn && workoutNotes && workoutNoteInput) {
+    workoutNoteBtn.addEventListener('click', () => {
+        workoutNotes.classList.add('is-open');
+        workoutNoteInput.focus();
+    });
+    document.querySelector('.js-clear-workout-note').addEventListener('click', () => {
+        workoutNoteInput.value = '';
+        saveWorkoutField('notes', '');
+        workoutNotes.classList.remove('is-open');
+    });
+    workoutNoteInput.addEventListener('blur', (event) => {
+        if (workoutNoteInput.value.trim() !== '') return;
+        const next = event.relatedTarget;
+        if (next && next.classList.contains('js-clear-workout-note')) return;
+        workoutNotes.classList.remove('is-open');
+    });
+}
 
 // --- глобальные единицы ---
 const unitSelect = document.getElementById('global_weight_unit');

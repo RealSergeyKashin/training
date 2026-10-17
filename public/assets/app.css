@@ -90,9 +90,10 @@ h2 {
 .btn-danger:hover { background: #fecaca; }
 
 .btn-sm {
-    min-height: 32px;
+    height: 36px;
+    min-height: 36px;
     padding: 0 10px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 .btn-plan {
@@ -100,7 +101,7 @@ h2 {
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: var(--gray-btn);
     color: var(--gray-btn-text);
     font-family: inherit;
@@ -126,10 +127,17 @@ h2 {
 
 .actions {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 8px;
+}
+
+.actions-main {
+    display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-    margin: 12px 0 8px;
 }
 
 .meta {
@@ -204,13 +212,24 @@ input[type="password"],
 select,
 textarea {
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 16px;
     min-height: 36px;
     padding: 6px 10px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     background: #fff;
     color: var(--text);
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input:focus,
@@ -340,16 +359,58 @@ select:disabled {
     align-items: stretch;
 }
 
+.workout-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workout-title-row h2 {
+    margin: 0;
+}
+
 .workout-edit-row .lbl {
-    min-width: 72px;
+    min-width: 0;
 }
 
-.workout-edit-row input[type="number"] {
-    width: 100px;
+.body-weight {
+    width: 4.2rem;
+    text-align: right;
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
-.workout-edit-row textarea {
-    width: 100%;
+.unit-ghost {
+    width: auto;
+    border-color: transparent;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0 16px 0 2px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    background-size: 10px 6px;
+    appearance: none;
+}
+
+.unit-ghost:hover,
+.unit-ghost:focus {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.workout-notes {
+    display: none;
+    gap: 4px;
+    align-items: center;
+}
+
+.workout-notes.is-open { display: flex; }
+
+.workout-notes-input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
 }
 
 /* ===== Exercises & sets ===== */
@@ -404,7 +465,7 @@ select:disabled {
     min-height: 36px;
     padding: 0;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius);
     background: var(--gray-btn);
     color: var(--gray-btn-text);
     font-family: inherit;
@@ -453,10 +514,10 @@ select:disabled {
 }
 
 .set-head,
-.set-line {
+.set-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 2.35rem minmax(0, 1fr) 2.35rem auto;
-    column-gap: 4px;
+    grid-template-columns: 4.3rem 2.3rem 4.3rem 2.3rem auto auto;
+    column-gap: 3px;
     align-items: center;
 }
 
@@ -467,8 +528,16 @@ select:disabled {
     font-weight: 500;
 }
 
-.set-head-plan { grid-column: 1 / 3; }
-.set-head-fact { grid-column: 3 / 5; }
+.set-head .set-w,
+.set-head .set-r {
+    text-align: left;
+}
+
+.set-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
 
 .set-row {
     position: relative;
@@ -487,20 +556,16 @@ select:disabled {
 .set-row.saved { border-color: #86efac; }
 .set-row.error { border-color: #fca5a5; }
 
-.set-tools {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 4px;
-    align-items: center;
-}
+.set-line > .danger { margin-left: auto; }
+
+.set-w { width: 4.3rem; text-align: right; }
+.set-r { width: 2.3rem; text-align: left; }
 
 .set-row input[type="number"] {
-    width: 100%;
     min-width: 0;
     min-height: 36px;
     padding: 6px 4px;
     font-size: 16px;
-    text-align: right;
 }
 
 .set-fact { font-weight: 650; }
@@ -529,7 +594,7 @@ select:disabled {
     min-height: 36px;
     padding: 6px 8px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius);
     font-size: 16px;
     background: #fff;
     color: var(--text);
