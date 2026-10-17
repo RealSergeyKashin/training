@@ -119,9 +119,7 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
     </div>
 
     <div class="note-line<?= trim((string)($workout['notes'] ?? '')) === '' ? ' is-empty' : '' ?>">
-        <div class="note-read">
-            <span class="note-text"><?= htmlspecialchars(trim((string)($workout['notes'] ?? '')) === '' ? 'Комментарий к тренировке' : $workout['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
-        </div>
+        <div class="note-read"><span class="note-text"><?= htmlspecialchars(trim((string)($workout['notes'] ?? '')) === '' ? 'Комментарий к тренировке' : $workout['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span></div>
         <textarea id="workout-notes" name="workout_notes" class="js-workout-auto workout-notes-input plain-note" data-field="notes" rows="1"
                   placeholder="Комментарий к тренировке"><?= htmlspecialchars($workout['notes'] ?? '') ?></textarea>
         <button type="button" class="icon-btn note-clear js-clear-note" aria-label="Очистить комментарий" title="Очистить комментарий">×</button>
@@ -245,9 +243,7 @@ $unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
 
                             <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
                                 <div class="note-line<?= $set_notes === '' ? ' is-empty' : '' ?>">
-                                    <div class="note-read">
-                                        <span class="note-text"><?= htmlspecialchars($set_notes === '' ? 'Комментарий к подходу' : $set['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
-                                    </div>
+                                    <div class="note-read"><span class="note-text"><?= htmlspecialchars($set_notes === '' ? 'Комментарий к подходу' : $set['notes']) ?></span><span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span></div>
                                     <textarea id="set-<?= $sid ?>-notes" name="set-<?= $sid ?>-notes"
                                               class="js-auto set-notes-input plain-note" data-field="notes" rows="1"
                                               placeholder="Комментарий к подходу"><?= htmlspecialchars($set['notes'] ?? '') ?></textarea>
@@ -521,6 +517,18 @@ if (unitSelect) {
     });
 }
 
+function placePencil(line) {
+    const text = line.querySelector('.note-text');
+    const pencil = line.querySelector('.note-pencil');
+    if (!text || !pencil) return;
+    const rects = text.getClientRects();
+    if (!rects.length) return;
+    const last = rects[rects.length - 1];
+    const base = line.getBoundingClientRect();
+    pencil.style.left = (last.right - base.left + 4) + 'px';
+    pencil.style.top = (last.top - base.top + (last.height - 14) / 2) + 'px';
+}
+
 function syncNoteRead(el) {
     const line = el.closest('.note-line');
     if (!line) return;
@@ -528,6 +536,7 @@ function syncNoteRead(el) {
     const empty = el.value.trim() === '';
     if (text) text.textContent = empty ? (el.getAttribute('placeholder') || '') : el.value;
     line.classList.toggle('is-empty', empty);
+    placePencil(line);
 }
 
 function fitNote(el) {
@@ -538,6 +547,7 @@ function fitNote(el) {
 document.querySelectorAll('textarea.plain-note').forEach(function (el) {
     const line = el.closest('.note-line');
     if (line) {
+        placePencil(line);
         line.addEventListener('click', function (event) {
             if (event.target.closest('.note-clear')) return;
             el.focus();
@@ -551,86 +561,115 @@ document.querySelectorAll('textarea.plain-note').forEach(function (el) {
 });
 
 window.addEventListener('resize', function () {
+    document.querySelectorAll('.note-line').forEach(placePencil);
     document.querySelectorAll('textarea.plain-note').forEach(fitNote);
 });
 
+let setDrag = null;
+
+function stopSetDrag(save) {
+    if (!setDrag) return;
+    const drag = setDrag;
+    setDrag = null;
+    document.removeEventListener('pointermove', onSetDragMove);
+    document.removeEventListener('pointerup', onSetDragEnd);
+    document.removeEventListener('pointercancel', onSetDragEnd);
+    window.removeEventListener('blur', onSetDragBlur);
+    drag.row.classList.remove('is-dragging');
+    drag.row.style.top = '';
+    drag.row.style.left = '';
+    drag.row.style.width = '';
+    if (drag.placeholder && drag.placeholder.parentNode) {
+        drag.placeholder.replaceWith(drag.row);
+    }
+    if (!save || !drag.active) return;
+    const nextOrder = [...drag.list.querySelectorAll('.set-row')].map(function (item) {
+        return item.getAttribute('data-set-id');
+    }).join(',');
+    if (nextOrder === drag.startOrder) return;
+    fetch('api_reorder_sets.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            exercise_id: Number(drag.list.getAttribute('data-exercise-id')),
+            ids: nextOrder.split(',').map(Number)
+        })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) { if (!data.ok) throw new Error('fail'); })
+    .catch(function () { window.location.reload(); });
+}
+
+function placeSetGap(clientY) {
+    const rows = [...setDrag.list.querySelectorAll('.set-row')].filter(function (item) {
+        return item !== setDrag.row;
+    });
+    for (let i = 0; i < rows.length; i++) {
+        const box = rows[i].getBoundingClientRect();
+        if (clientY < box.top + box.height / 2) {
+            rows[i].before(setDrag.placeholder);
+            return;
+        }
+    }
+    setDrag.list.appendChild(setDrag.placeholder);
+}
+
+function onSetDragMove(e) {
+    if (!setDrag || e.pointerId !== setDrag.pointerId) return;
+    if (!setDrag.active) {
+        if (Math.abs(e.clientY - setDrag.startY) < 5 && Math.abs(e.clientX - setDrag.startX) < 5) return;
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
+        const rect = setDrag.row.getBoundingClientRect();
+        setDrag.offsetY = e.clientY - rect.top;
+        setDrag.placeholder = document.createElement('div');
+        setDrag.placeholder.className = 'set-placeholder';
+        setDrag.placeholder.style.height = rect.height + 'px';
+        setDrag.row.before(setDrag.placeholder);
+        setDrag.row.classList.add('is-dragging');
+        setDrag.row.style.width = rect.width + 'px';
+        setDrag.row.style.left = rect.left + 'px';
+        setDrag.active = true;
+    }
+    e.preventDefault();
+    setDrag.row.style.top = (e.clientY - setDrag.offsetY) + 'px';
+    placeSetGap(e.clientY);
+}
+
+function onSetDragEnd(e) {
+    if (!setDrag || e.pointerId !== setDrag.pointerId) return;
+    stopSetDrag(true);
+}
+
+function onSetDragBlur() {
+    stopSetDrag(true);
+}
+
 document.querySelectorAll('.set-grip').forEach(function (grip) {
     grip.addEventListener('pointerdown', function (event) {
-        if (event.button !== 0) return;
+        if (event.button !== 0 || setDrag) return;
         const row = grip.closest('.set-row');
         const list = grip.closest('.sets');
         if (!row || !list) return;
         event.preventDefault();
-        const startOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
-            return item.getAttribute('data-set-id');
-        }).join(',');
-        const rect = row.getBoundingClientRect();
-        const offsetY = event.clientY - rect.top;
-        let active = false;
-        let placeholder = null;
-        try { grip.setPointerCapture(event.pointerId); } catch (err) {}
-
-        function placeGap(clientY) {
-            const rows = [...list.querySelectorAll('.set-row')];
-            for (let i = 0; i < rows.length; i++) {
-                const box = rows[i].getBoundingClientRect();
-                if (clientY < box.top + box.height / 2) {
-                    rows[i].before(placeholder);
-                    return;
-                }
-            }
-            list.appendChild(placeholder);
-        }
-
-        function move(e) {
-            if (e.pointerId !== event.pointerId) return;
-            if (!active) {
-                if (Math.abs(e.clientY - event.clientY) < 4) return;
-                active = true;
-                placeholder = document.createElement('div');
-                placeholder.className = 'set-placeholder';
-                placeholder.style.height = rect.height + 'px';
-                row.before(placeholder);
-                row.classList.add('is-dragging');
-                row.style.width = rect.width + 'px';
-                row.style.left = rect.left + 'px';
-            }
-            row.style.top = (e.clientY - offsetY) + 'px';
-            placeGap(e.clientY);
-        }
-
-        function end(e) {
-            if (e.pointerId !== event.pointerId) return;
-            grip.removeEventListener('pointermove', move);
-            grip.removeEventListener('pointerup', end);
-            grip.removeEventListener('pointercancel', end);
-            if (placeholder) placeholder.replaceWith(row);
-            row.classList.remove('is-dragging');
-            row.style.width = '';
-            row.style.left = '';
-            row.style.top = '';
-            if (!active) return;
-            const nextOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
+        setDrag = {
+            pointerId: event.pointerId,
+            row: row,
+            list: list,
+            startX: event.clientX,
+            startY: event.clientY,
+            startOrder: [...list.querySelectorAll('.set-row')].map(function (item) {
                 return item.getAttribute('data-set-id');
-            }).join(',');
-            if (nextOrder === startOrder) return;
-            const ids = nextOrder.split(',').map(Number);
-            fetch('api_reorder_sets.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    exercise_id: Number(list.getAttribute('data-exercise-id')),
-                    ids: ids
-                })
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) { if (!data.ok) throw new Error('fail'); })
-            .catch(function () { window.location.reload(); });
-        }
-
-        grip.addEventListener('pointermove', move);
-        grip.addEventListener('pointerup', end);
-        grip.addEventListener('pointercancel', end);
+            }).join(','),
+            active: false,
+            placeholder: null,
+            offsetY: 0
+        };
+        document.addEventListener('pointermove', onSetDragMove, { passive: false });
+        document.addEventListener('pointerup', onSetDragEnd);
+        document.addEventListener('pointercancel', onSetDragEnd);
+        window.addEventListener('blur', onSetDragBlur);
     });
 });
 
