@@ -98,10 +98,10 @@ $posted_catalog = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : null
 <body>
 
 <div class="form-page">
-    <div class="top-nav page-nav">
-        <a href="/" class="back-link">← Все тренировки</a>
-        <a href="/view.php?id=<?= (int)$workout_id ?>" class="back-link">← Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></a>
-    </div>
+    <nav class="crumbs" aria-label="Навигация">
+        <a href="/" class="back-link">Все тренировки</a>
+        <a href="/view.php?id=<?= (int)$workout_id ?>" class="back-link">Тренировка <?= htmlspecialchars(date('d.m.Y', strtotime($workout['workout_date']))) ?></a>
+    </nav>
 
     <h1>Добавить упражнение</h1>
     <div class="meta">

@@ -99,10 +99,10 @@ $posted_catalog = isset($_POST['catalog_id']) && $_POST['catalog_id'] !== '' ? (
 </head>
 <body>
     <div class="form-page">
-        <div class="top-nav page-nav">
-            <a href="/" class="back-link">← Все тренировки</a>
-            <a href="/view.php?id=<?= (int)$exercise['workout_id'] ?>" class="back-link">← Тренировка <?= htmlspecialchars($workout_date_label) ?></a>
-        </div>
+        <nav class="crumbs" aria-label="Навигация">
+            <a href="/" class="back-link">Все тренировки</a>
+            <a href="/view.php?id=<?= (int)$exercise['workout_id'] ?>" class="back-link">Тренировка <?= htmlspecialchars($workout_date_label) ?></a>
+        </nav>
         <h1>Редактировать упражнение</h1>
 
         <?php if ($error): ?>

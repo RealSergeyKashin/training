@@ -89,18 +89,19 @@ function icon_pencil(): string {
 <?php
 $weekdays = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
 $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
+$unit_short = $weight_unit === 'lbs' ? 'фнт' : 'кг';
 ?>
-<div class="top-nav">
-    <a href="/" class="back-link">← Все тренировки</a>
-</div>
+<nav class="crumbs" aria-label="Навигация">
+    <a href="/" class="back-link">Все тренировки</a>
+</nav>
 
 <div class="workout-edit" data-workout-id="<?= (int)$workout['id'] ?>">
     <div class="workout-title-row">
         <h2>Тренировка</h2>
-        <input type="date" class="js-workout-auto date-ghost" data-field="workout_date"
+        <input type="date" id="workout-date" class="js-workout-auto date-ghost" data-field="workout_date"
                aria-label="Дата"
                value="<?= htmlspecialchars($workout['workout_date']) ?>">
-        <button type="button" class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></button>
+        <label for="workout-date" class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></label>
     </div>
 
     <div class="workout-edit-row">
@@ -117,10 +118,10 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
     </div>
 
     <div class="note-line">
-        <input type="text" class="js-workout-auto workout-notes-input plain-note" data-field="notes"
-               placeholder="Комментарий к тренировке"
-               value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
+        <textarea class="js-workout-auto workout-notes-input plain-note" data-field="notes" rows="1"
+                  placeholder="Комментарий к тренировке"><?= htmlspecialchars($workout['notes'] ?? '') ?></textarea>
         <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+        <button type="button" class="icon-btn note-clear js-clear-note" aria-label="Очистить комментарий" title="Очистить комментарий">×</button>
     </div>
 </div>
 
@@ -177,11 +178,14 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
             <?php if (empty($ex_sets)): ?>
                 <div class="no-sets">Подходов пока нет</div>
             <?php else: ?>
-                <div class="sets">
+                <div class="sets" data-exercise-id="<?= (int)$exercise['id'] ?>">
                     <div class="set-head" aria-hidden="true">
-                        <span class="set-w set-head-plan">План</span>
-                        <span class="set-r"></span>
-                        <span class="set-w">Факт</span>
+                        <span class="set-grip-space"></span>
+                        <div class="set-main">
+                            <span class="set-w set-head-plan">План</span>
+                            <span class="set-r"></span>
+                            <span class="set-w">Факт</span>
+                        </div>
                     </div>
                     <?php foreach ($ex_sets as $set): ?>
                         <?php $set_notes = trim((string)($set['notes'] ?? '')); ?>
@@ -189,21 +193,35 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
                              id="set-<?= (int)$set['id'] ?>"
                              data-set-id="<?= (int)$set['id'] ?>">
                             <div class="set-line">
+                                <button type="button" class="set-grip" aria-label="Перетащить подход" title="Перетащить подход">
+                                    <svg width="10" height="16" viewBox="0 0 10 16" aria-hidden="true">
+                                        <circle cx="2" cy="2" r="1.2" fill="currentColor"/>
+                                        <circle cx="8" cy="2" r="1.2" fill="currentColor"/>
+                                        <circle cx="2" cy="8" r="1.2" fill="currentColor"/>
+                                        <circle cx="8" cy="8" r="1.2" fill="currentColor"/>
+                                        <circle cx="2" cy="14" r="1.2" fill="currentColor"/>
+                                        <circle cx="8" cy="14" r="1.2" fill="currentColor"/>
+                                    </svg>
+                                </button>
                                 <div class="set-main">
                                     <input type="number" class="js-auto set-w" data-field="planned_weight"
                                            inputmode="decimal" step="0.5" min="0"
+                                           placeholder="<?= htmlspecialchars($unit_short) ?>"
                                            aria-label="План, вес"
                                            value="<?= htmlspecialchars(input_num($set['planned_weight'])) ?>">
                                     <input type="number" class="js-auto set-r" data-field="planned_reps"
                                            inputmode="numeric" step="1" min="0"
+                                           placeholder="×"
                                            aria-label="План, повторы"
                                            value="<?= $set['planned_reps'] !== null ? htmlspecialchars((string)(int)$set['planned_reps']) : '' ?>">
                                     <input type="number" class="js-auto set-w set-fact" data-field="actual_weight"
                                            inputmode="decimal" step="0.5" min="0"
+                                           placeholder="<?= htmlspecialchars($unit_short) ?>"
                                            aria-label="Факт, вес"
                                            value="<?= htmlspecialchars(input_num($set['actual_weight'])) ?>">
                                     <input type="number" class="js-auto set-r set-fact" data-field="actual_reps"
                                            inputmode="numeric" step="1" min="0"
+                                           placeholder="×"
                                            aria-label="Факт, повторы"
                                            value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
                                     <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
@@ -217,14 +235,11 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
 
                             <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
                                 <div class="note-line">
-                                    <input type="text"
-                                        class="js-auto set-notes-input plain-note"
-                                        data-field="notes"
-                                        placeholder="Комментарий к подходу"
-                                        value="<?= htmlspecialchars($set['notes'] ?? '') ?>">
+                                    <textarea class="js-auto set-notes-input plain-note" data-field="notes" rows="1"
+                                              placeholder="Комментарий к подходу"><?= htmlspecialchars($set['notes'] ?? '') ?></textarea>
                                     <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+                                    <button type="button" class="icon-btn note-clear js-clear-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
                                 </div>
-                                <button type="button" class="icon-btn js-clear-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
                                 <span class="note-gap" aria-hidden="true"></span>
                             </div>
                         </div>
@@ -373,15 +388,24 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
     });
 
     document.querySelectorAll('.js-clear-note').forEach(function (btn) {
+        btn.addEventListener('pointerdown', function (event) {
+            event.preventDefault();
+        });
         btn.addEventListener('click', function () {
+            var line = btn.closest('.note-line');
+            var input = line && line.querySelector('textarea');
+            if (!input) return;
+            input.value = '';
+            if (typeof fitNote === 'function') fitNote(input);
             var row = btn.closest('.set-row');
-            var notes = row.querySelector('.set-notes');
-            var input = row.querySelector('.set-notes-input');
-            if (input) {
-                input.value = '';
-                scheduleSave(input);
+            if (!row) {
+                saveWorkoutField(input.getAttribute('data-field'), '');
+                input.blur();
+                return;
             }
-            notes.classList.remove('is-open');
+            scheduleSave(input);
+            var notes = row.querySelector('.set-notes');
+            if (notes) notes.classList.remove('is-open');
             var add = row.querySelector('.js-add-note');
             if (add) add.classList.remove('is-hidden');
         });
@@ -439,16 +463,19 @@ function showWeekday(value) {
 }
 
 if (weekdayEl) {
-    weekdayEl.addEventListener('click', function () {
-        const input = document.querySelector('.date-ghost');
+    weekdayEl.addEventListener('click', function (event) {
+        const input = document.getElementById('workout-date');
         if (!input) return;
-        if (typeof input.showPicker === 'function') {
-            try {
-                input.showPicker();
-                return;
-            } catch (e) {}
+        const ios = /iP(hone|ad|od)/.test(navigator.userAgent)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (ios) return;
+        if (typeof input.showPicker !== 'function') return;
+        event.preventDefault();
+        try {
+            input.showPicker();
+        } catch (e) {
+            input.focus();
         }
-        input.focus();
     });
 }
 
@@ -479,6 +506,84 @@ if (unitSelect) {
         });
     });
 }
+
+function fitNote(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+}
+
+document.querySelectorAll('textarea.plain-note').forEach(function (el) {
+    fitNote(el);
+    el.addEventListener('input', function () { fitNote(el); });
+    el.addEventListener('focus', function () { fitNote(el); });
+});
+
+window.addEventListener('resize', function () {
+    document.querySelectorAll('textarea.plain-note').forEach(fitNote);
+});
+
+document.querySelectorAll('.set-grip').forEach(function (grip) {
+    grip.addEventListener('pointerdown', function (event) {
+        if (event.button !== 0) return;
+        const row = grip.closest('.set-row');
+        const list = grip.closest('.sets');
+        if (!row || !list) return;
+        event.preventDefault();
+        const startOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
+            return item.getAttribute('data-set-id');
+        }).join(',');
+        let active = false;
+        try { grip.setPointerCapture(event.pointerId); } catch (err) {}
+
+        function move(e) {
+            if (e.pointerId !== event.pointerId) return;
+            if (!active && Math.abs(e.clientY - event.clientY) < 6) return;
+            active = true;
+            row.classList.add('is-dragging');
+            const rows = [...list.querySelectorAll('.set-row')];
+            let before = null;
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i] === row) continue;
+                const box = rows[i].getBoundingClientRect();
+                if (e.clientY < box.top + box.height / 2) {
+                    before = rows[i];
+                    break;
+                }
+            }
+            if (before) list.insertBefore(row, before);
+            else list.appendChild(row);
+        }
+
+        function end(e) {
+            if (e.pointerId !== event.pointerId) return;
+            grip.removeEventListener('pointermove', move);
+            grip.removeEventListener('pointerup', end);
+            grip.removeEventListener('pointercancel', end);
+            row.classList.remove('is-dragging');
+            if (!active) return;
+            const nextOrder = [...list.querySelectorAll('.set-row')].map(function (item) {
+                return item.getAttribute('data-set-id');
+            }).join(',');
+            if (nextOrder === startOrder) return;
+            const ids = nextOrder.split(',').map(Number);
+            fetch('api_reorder_sets.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    exercise_id: Number(list.getAttribute('data-exercise-id')),
+                    ids: ids
+                })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { if (!data.ok) throw new Error('fail'); })
+            .catch(function () { window.location.reload(); });
+        }
+
+        grip.addEventListener('pointermove', move);
+        grip.addEventListener('pointerup', end);
+        grip.addEventListener('pointercancel', end);
+    });
+});
 
 // --- добавить подход ---
 document.querySelectorAll('.js-add-set').forEach(btn => {
