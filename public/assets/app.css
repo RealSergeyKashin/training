@@ -14,7 +14,8 @@
     --gray-btn-hover: #d1d5db;
     --gray-btn-text: #374151;
     --warmup-bg: #fffbeb;
-    --work-bg: #f8fafc;
+    --work-bg: #f8f8f5;
+    --plan: #864cad;
     --radius: 8px;
     --radius-lg: 12px;
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -133,6 +134,15 @@ h2 {
 }
 
 .back-link:hover { color: var(--blue-hover); }
+
+.page-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
 
 .actions {
     display: flex;
@@ -402,10 +412,17 @@ input[type="date"].date-ghost {
     box-shadow: none;
 }
 
-.weekday {
+button.weekday {
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
     font-size: 16px;
     font-style: italic;
+    font-weight: 400;
     line-height: 1.2;
+    color: var(--text);
+    cursor: pointer;
 }
 
 .workout-edit-row .lbl {
@@ -547,7 +564,7 @@ input[type="date"].date-ghost {
 .set-head,
 .set-main {
     display: grid;
-    grid-template-columns: 4.3rem 2.3rem 4.3rem 2.3rem auto auto;
+    grid-template-columns: 4rem 2.3rem 4rem 2.3rem auto auto;
     column-gap: 3px;
     align-items: center;
 }
@@ -587,9 +604,79 @@ input[type="date"].date-ghost {
 .set-row.saved { border-color: #86efac; }
 .set-row.error { border-color: #fca5a5; }
 
-.set-line > .danger { margin-left: auto; }
+.set-line > .danger {
+    margin-left: auto;
+    background: transparent;
+    color: var(--gray-btn-text);
+}
 
-.set-w { width: 4.3rem; text-align: right; }
+.set-line > .danger:hover { background: var(--gray-btn); }
+
+.icon-btn.is-hidden { display: none; }
+
+.note-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.set-notes .note-line {
+    max-width: calc(100% - 80px);
+}
+
+.set-notes:focus-within .note-line {
+    flex: 1;
+}
+
+input.plain-note {
+    field-sizing: content;
+    width: auto;
+    max-width: calc(100% - 22px);
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.note-line:focus-within input.plain-note {
+    field-sizing: fixed;
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-color: #93c5fd;
+    background: #fff;
+}
+
+.note-pencil {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+.note-line:focus-within .note-pencil { display: none; }
+
+.note-gap {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.workout-edit .note-line { flex: none; width: 100%; }
+
+.set-w { width: 4rem; text-align: right; }
+
+.set-head-plan,
+input.set-w:not(.set-fact),
+input.set-r:not(.set-fact) {
+    color: var(--plan);
+}
 .set-r { width: 2.3rem; text-align: left; }
 
 .set-row input[type="number"] {
@@ -619,21 +706,10 @@ input[type="date"].date-ghost {
 .set-notes.is-open { display: flex; }
 
 .set-notes-input {
-    flex: 1;
     min-width: 0;
-    width: auto;
     min-height: 36px;
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: 16px;
-    background: #fff;
     color: var(--text);
-}
-
-.set-notes-input:focus {
-    outline: none;
-    border-color: #93c5fd;
 }
 
 .no-sets {

@@ -23,15 +23,12 @@ if (!$source) {
 try {
     $pdo->beginTransaction();
 
-    // Новая тренировка: сегодняшняя дата, тот же вес/комментарий
     $stmt = $pdo->prepare("
         INSERT INTO workouts (workout_date, body_weight, body_weight_unit, notes)
-        VALUES (CURDATE(), ?, ?, ?)
+        VALUES (CURDATE(), NULL, ?, NULL)
     ");
     $stmt->execute([
-        $source['body_weight'],
         $source['body_weight_unit'],
-        $source['notes'],
     ]);
     $new_workout_id = (int)$pdo->lastInsertId();
 
@@ -71,7 +68,7 @@ try {
             $ex['name'],
             $ex['measurement_type'],
             $ex['sort_order'],
-            $ex['notes'],
+            null,
         ]);
         $new_exercise_id = (int)$pdo->lastInsertId();
 
@@ -85,7 +82,7 @@ try {
                 $set['planned_weight'],
                 $set['planned_reps'],
                 $set['planned_value'],
-                $set['notes'],
+                null,
             ]);
         }
     }

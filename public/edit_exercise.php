@@ -23,6 +23,11 @@ if (!$exercise) {
     exit;
 }
 
+$stmt = $pdo->prepare("SELECT workout_date FROM workouts WHERE id = ? AND deleted_at IS NULL");
+$stmt->execute([(int)$exercise['workout_id']]);
+$workout_date = $stmt->fetchColumn();
+$workout_date_label = $workout_date ? date('d.m.Y', strtotime($workout_date)) : '';
+
 $catalog = $pdo->query("
     SELECT id, name, measurement_type
     FROM exercise_catalog
@@ -94,6 +99,10 @@ $posted_catalog = isset($_POST['catalog_id']) && $_POST['catalog_id'] !== '' ? (
 </head>
 <body>
     <div class="form-page">
+        <div class="top-nav page-nav">
+            <a href="/" class="back-link">← Все тренировки</a>
+            <a href="/view.php?id=<?= (int)$exercise['workout_id'] ?>" class="back-link">← Тренировка <?= htmlspecialchars($workout_date_label) ?></a>
+        </div>
         <h1>Редактировать упражнение</h1>
 
         <?php if ($error): ?>

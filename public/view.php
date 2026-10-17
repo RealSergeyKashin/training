@@ -100,7 +100,7 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
         <input type="date" class="js-workout-auto date-ghost" data-field="workout_date"
                aria-label="Дата"
                value="<?= htmlspecialchars($workout['workout_date']) ?>">
-        <span class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></span>
+        <button type="button" class="weekday" id="workout-weekday"><?= htmlspecialchars($weekday) ?></button>
     </div>
 
     <div class="workout-edit-row">
@@ -116,9 +116,12 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
         <span class="save-status js-workout-status"></span>
     </div>
 
-    <input type="text" class="js-workout-auto workout-notes-input" data-field="notes"
-           placeholder="Комментарий к тренировке"
-           value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
+    <div class="note-line">
+        <input type="text" class="js-workout-auto workout-notes-input plain-note" data-field="notes"
+               placeholder="Комментарий к тренировке"
+               value="<?= htmlspecialchars($workout['notes'] ?? '') ?>">
+        <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+    </div>
 </div>
 
 <div class="actions">
@@ -176,7 +179,7 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
             <?php else: ?>
                 <div class="sets">
                     <div class="set-head" aria-hidden="true">
-                        <span class="set-w">План</span>
+                        <span class="set-w set-head-plan">План</span>
                         <span class="set-r"></span>
                         <span class="set-w">Факт</span>
                     </div>
@@ -204,7 +207,7 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
                                            aria-label="Факт, повторы"
                                            value="<?= $set['actual_reps'] !== null ? htmlspecialchars((string)(int)$set['actual_reps']) : '' ?>">
                                     <button type="button" class="icon-btn js-copy-plan" aria-label="Подставить план в факт" title="Подставить план в факт">=</button>
-                                    <button type="button" class="icon-btn js-add-note" aria-label="Комментарий" title="Комментарий">T</button>
+                                    <button type="button" class="icon-btn js-add-note<?= $set_notes !== '' ? ' is-hidden' : '' ?>" aria-label="Комментарий" title="Комментарий">T</button>
                                 </div>
                                 <a class="icon-btn danger" href="delete.php?type=set&id=<?= (int)$set['id'] ?>"
                                    aria-label="Удалить подход" title="Удалить подход"
@@ -213,12 +216,16 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
                             <span class="save-status js-status"></span>
 
                             <div class="set-notes<?= $set_notes !== '' ? ' is-open' : '' ?>">
-                                <input type="text"
-                                    class="js-auto set-notes-input"
-                                    data-field="notes"
-                                    placeholder="Комментарий к подходу"
-                                    value="<?= htmlspecialchars($set['notes'] ?? '') ?>">
+                                <div class="note-line">
+                                    <input type="text"
+                                        class="js-auto set-notes-input plain-note"
+                                        data-field="notes"
+                                        placeholder="Комментарий к подходу"
+                                        value="<?= htmlspecialchars($set['notes'] ?? '') ?>">
+                                    <span class="note-pencil" aria-hidden="true"><?= icon_pencil() ?></span>
+                                </div>
                                 <button type="button" class="icon-btn js-clear-note" aria-label="Удалить комментарий" title="Удалить комментарий">×</button>
+                                <span class="note-gap" aria-hidden="true"></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -359,6 +366,7 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
             var notes = row.querySelector('.set-notes');
             var input = row.querySelector('.set-notes-input');
             notes.classList.add('is-open');
+            btn.classList.add('is-hidden');
             showBubble(btn, 'Комментарий');
             if (input) input.focus();
         });
@@ -374,6 +382,8 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
                 scheduleSave(input);
             }
             notes.classList.remove('is-open');
+            var add = row.querySelector('.js-add-note');
+            if (add) add.classList.remove('is-hidden');
         });
     });
 
@@ -384,6 +394,9 @@ $weekday = $weekdays[(int)date('w', strtotime($workout['workout_date']))];
             if (next && next.classList.contains('js-clear-note')) return;
             var notes = input.closest('.set-notes');
             if (notes) notes.classList.remove('is-open');
+            var row = input.closest('.set-row');
+            var add = row && row.querySelector('.js-add-note');
+            if (add) add.classList.remove('is-hidden');
         });
     });
 })();
@@ -423,6 +436,20 @@ function showWeekday(value) {
     const date = new Date(value + 'T00:00:00');
     if (Number.isNaN(date.getTime())) return;
     weekdayEl.textContent = weekdays[date.getDay()];
+}
+
+if (weekdayEl) {
+    weekdayEl.addEventListener('click', function () {
+        const input = document.querySelector('.date-ghost');
+        if (!input) return;
+        if (typeof input.showPicker === 'function') {
+            try {
+                input.showPicker();
+                return;
+            } catch (e) {}
+        }
+        input.focus();
+    });
 }
 
 document.querySelectorAll('.js-workout-auto').forEach(el => {
